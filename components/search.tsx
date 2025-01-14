@@ -3,7 +3,7 @@ import React from 'react';
 export const Search: React.FC = () => {
   return (
     <div className="search-container">
-      <label htmlFor="searchInput">{"Search input"}</label>
+      <label htmlFor="searchInput">Search input</label>
       <input 
         id="searchInput"
         type="text" 
