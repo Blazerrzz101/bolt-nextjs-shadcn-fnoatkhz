@@ -19,7 +19,12 @@ const Command = React.forwardRef<
 ));
 Command.displayName = CommandPrimitive.displayName;
 
-interface CommandDialogProps extends DialogProps {}
+// This interface extends DialogProps without adding new properties
+// It's used to provide proper typing for the CommandDialog component
+interface CommandDialogProps extends DialogProps {
+  // Intentionally empty - inherits all properties from DialogProps
+  children: React.ReactNode; // Making children explicit for better documentation
+}
 
 function CommandDialog({ children, ...props }: CommandDialogProps) {
   return (
