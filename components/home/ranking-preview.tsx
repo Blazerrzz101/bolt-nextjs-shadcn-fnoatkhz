@@ -8,6 +8,7 @@ import Image from "next/image";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type MouseEvent } from "react";
+import { fadeInVariants, slideUpVariants, pulseVariants } from "@/components/animations";
 
 export function RankingPreview() {
   const topProduct = products[0];
@@ -24,9 +25,10 @@ export function RankingPreview() {
   return (
     <div className="container py-24">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
+        variants={fadeInVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
         className="text-center"
       >
         <h2 className="text-3xl font-bold">How Rankings Work</h2>
@@ -37,9 +39,10 @@ export function RankingPreview() {
 
       <div className="mt-16">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
+          variants={slideUpVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
           className="relative mx-auto max-w-3xl"
         >
           <Card className={cn("ranking-card overflow-hidden")}>
@@ -103,13 +106,13 @@ export function RankingPreview() {
 
           <motion.div
             className="absolute -right-8 -top-8 h-16 w-16 rounded-full bg-primary/10"
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            variants={pulseVariants}
+            animate="animate"
           />
           <motion.div
             className="absolute -bottom-4 -left-4 h-8 w-8 rounded-full bg-primary/20"
-            animate={{ scale: [1, 1.3, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            variants={pulseVariants}
+            animate="animate"
           />
         </motion.div>
       </div>
