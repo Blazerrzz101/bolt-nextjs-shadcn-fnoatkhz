@@ -7,9 +7,19 @@ import { products } from "@/lib/data";
 import Image from "next/image";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { type MouseEvent } from "react";
 
 export function RankingPreview() {
   const topProduct = products[0];
+
+  const handleVote = (type: 'up' | 'down') => (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    // Handle vote logic here
+  };
+
+  if (!topProduct) {
+    return null;
+  }
 
   return (
     <div className="container py-24">
@@ -32,7 +42,7 @@ export function RankingPreview() {
           viewport={{ once: true }}
           className="relative mx-auto max-w-3xl"
         >
-          <Card className="ranking-card overflow-hidden">
+          <Card className={cn("ranking-card overflow-hidden")}>
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
             
             <div className="relative z-10 flex items-center gap-6 p-8">
@@ -46,6 +56,7 @@ export function RankingPreview() {
                   alt={topProduct.name}
                   fill
                   className="object-cover"
+                  priority
                 />
               </div>
 
@@ -61,10 +72,12 @@ export function RankingPreview() {
                   <Button
                     variant="ghost"
                     size="icon"
+                    onClick={handleVote('down')}
                     className={cn(
                       "hover:bg-destructive/10",
                       topProduct.userVote === "down" && "text-destructive"
                     )}
+                    type="button"
                   >
                     <ThumbsDown className="h-6 w-6" />
                   </Button>
@@ -74,10 +87,12 @@ export function RankingPreview() {
                   <Button
                     variant="ghost"
                     size="icon"
+                    onClick={handleVote('up')}
                     className={cn(
                       "hover:bg-primary/10",
                       topProduct.userVote === "up" && "text-primary"
                     )}
+                    type="button"
                   >
                     <ThumbsUp className="h-6 w-6" />
                   </Button>
@@ -86,16 +101,15 @@ export function RankingPreview() {
             </div>
           </Card>
 
-          {/* Floating Elements */}
           <motion.div
             className="absolute -right-8 -top-8 h-16 w-16 rounded-full bg-primary/10"
             animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
             className="absolute -bottom-4 -left-4 h-8 w-8 rounded-full bg-primary/20"
             animate={{ scale: [1, 1.3, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
           />
         </motion.div>
       </div>
