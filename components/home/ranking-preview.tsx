@@ -2,9 +2,11 @@
 
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { products } from "@/lib/data";
 import Image from "next/image";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function RankingPreview() {
   const topProduct = products[0];
@@ -34,7 +36,7 @@ export function RankingPreview() {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
             
             <div className="relative z-10 flex items-center gap-6 p-8">
-              <div className="warm-text-gradient text-7xl font-bold">
+              <div className="bg-gradient-to-r from-amber-500 to-orange-600 bg-clip-text text-7xl font-bold text-transparent">
                 #1
               </div>
 
@@ -56,15 +58,29 @@ export function RankingPreview() {
 
               <div className="flex flex-col items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <button className="vote-button">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "hover:bg-destructive/10",
+                      topProduct.userVote === "down" && "text-destructive"
+                    )}
+                  >
                     <ThumbsDown className="h-6 w-6" />
-                  </button>
+                  </Button>
                   <span className="min-w-[3ch] text-center text-xl font-bold">
                     {topProduct.votes}
                   </span>
-                  <button className="vote-button active">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "hover:bg-primary/10",
+                      topProduct.userVote === "up" && "text-primary"
+                    )}
+                  >
                     <ThumbsUp className="h-6 w-6" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
