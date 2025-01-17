@@ -1,9 +1,11 @@
-import { Product } from "./product"
-import { Review } from "./review"
-import { Thread } from "./thread"
-import { Poll } from "./poll"
+export type VoteType = "up" | "down" | null;
 
-export type { Product } from "./product"
-export type { Review } from "./review"
-export type { Thread } from "./thread"
-export type { Poll } from "./poll"
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  rank: number;
+  votes: number;
+  userVote: VoteType | null;
+}

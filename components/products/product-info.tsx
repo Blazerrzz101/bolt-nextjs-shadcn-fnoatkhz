@@ -1,43 +1,42 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Product } from "@/types"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { useState } from "react";
+import { Product } from "@/types";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Share2, ShoppingCart, ThumbsDown, ThumbsUp } from "lucide-react"
-import { useVote } from "@/hooks/use-vote"
-import { cn } from "@/lib/utils"
-import { toast } from "sonner"
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Share2, ShoppingCart, ThumbsDown, ThumbsUp } from "lucide-react";
+import { useVote } from "@/hooks/use-vote";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface ProductInfoProps {
-  product: Product
+  product: Product;
 }
 
 export function ProductInfo({ product }: ProductInfoProps) {
-  const [quantity, setQuantity] = useState("1")
-  const { product: currentProduct, vote } = useVote(product)
+  const [quantity, setQuantity] = useState("1");
+  const { product: currentProduct, vote } = useVote(product);
 
   const handleShare = async () => {
     try {
       await navigator.share({
         title: product.name,
         text: product.description,
-        url: window.location.href
-      })
+        url: window.location.href,
+      });
     } catch {
-      // Fallback to copying URL
-      navigator.clipboard.writeText(window.location.href)
-      toast.success("Link copied to clipboard!")
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied to clipboard!");
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -121,5 +120,5 @@ export function ProductInfo({ product }: ProductInfoProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
