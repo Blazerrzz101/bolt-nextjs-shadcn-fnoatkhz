@@ -1,15 +1,25 @@
+<<<<<<< HEAD
 "use client"
 
 import { useState } from "react"
 import { Product } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+=======
+"use client";
+
+import { useState } from "react";
+import { Product } from "@/types";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+>>>>>>> 64d0ba3 (fix: update materialized view configuration and client handling for product rankings)
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+<<<<<<< HEAD
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Share2, ShoppingCart, ThumbsDown, ThumbsUp } from "lucide-react"
@@ -24,12 +34,29 @@ interface ProductInfoProps {
 export function ProductInfo({ product }: ProductInfoProps) {
   const [quantity, setQuantity] = useState("1")
   const { product: currentProduct, vote } = useVote(product)
+=======
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Share2, ShoppingCart, ThumbsDown, ThumbsUp } from "lucide-react";
+import { useVote } from "@/hooks/use-vote";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+interface ProductInfoProps {
+  product: Product;
+}
+
+export function ProductInfo({ product }: ProductInfoProps) {
+  const [quantity, setQuantity] = useState("1");
+  const { product: currentProduct, vote } = useVote(product);
+>>>>>>> 64d0ba3 (fix: update materialized view configuration and client handling for product rankings)
 
   const handleShare = async () => {
     try {
       await navigator.share({
         title: product.name,
         text: product.description,
+<<<<<<< HEAD
         url: window.location.href
       })
     } catch {
@@ -38,6 +65,15 @@ export function ProductInfo({ product }: ProductInfoProps) {
       toast.success("Link copied to clipboard!")
     }
   }
+=======
+        url: window.location.href,
+      });
+    } catch {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied to clipboard!");
+    }
+  };
+>>>>>>> 64d0ba3 (fix: update materialized view configuration and client handling for product rankings)
 
   return (
     <div className="space-y-6">
@@ -121,5 +157,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
         </div>
       </div>
     </div>
+<<<<<<< HEAD
   )
 }
+=======
+  );
+}
+>>>>>>> 64d0ba3 (fix: update materialized view configuration and client handling for product rankings)
