@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+```tsx
+>>>>>>> 64d0ba3 (fix: update materialized view configuration and client handling for product rankings)
 "use client"
 
 import { motion } from "framer-motion"

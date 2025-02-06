@@ -1,3 +1,23 @@
+<<<<<<< HEAD
 node_modules
 node_modules
 .vercel
+=======
+node_modules/
+.env
+.env.local
+
+# Next.js build output
+.next
+.next/cache/
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+>>>>>>> 64d0ba3 (fix: update materialized view configuration and client handling for product rankings)
