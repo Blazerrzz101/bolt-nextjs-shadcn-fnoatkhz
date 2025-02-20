@@ -7,94 +7,94 @@ import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { Product } from '@/types/product'
 import { PLACEHOLDER_IMAGE } from "@/lib/constants"
+import { Star } from 'lucide-react'
+import { VoteButtons } from '@/components/products/vote-buttons'
+import { useVote } from '@/hooks/use-vote'
+import type { Database } from '@/types/supabase'
+
+type ProductRanking = Database['public']['Views']['product_rankings']['Row']
 
 interface ProductCardProps {
-  product: Product
+  product: ProductRanking
   variant?: 'default' | 'compact'
+  className?: string
 }
 
-export function ProductCard({ product, variant = 'default' }: ProductCardProps) {
+export function ProductCard({ product, variant = 'default', className }: ProductCardProps) {
+  const { vote } = useVote()
   const isCompact = variant === 'compact'
 
-  // Ensure we have fallback values for all required fields
-  const {
-    name = 'Product Name',
-    description = 'No description available',
-    image_url,
-    price = 0,
-    votes = 0,
-    rank = 0,
-    category = '',
-    url_slug = '',
-    id = ''
-  } = product || {}
-
-  // Ensure image_url is a valid string
-  const imageSource = typeof image_url === 'string' && image_url ? image_url : PLACEHOLDER_IMAGE
-
   return (
-    <Link 
-      href={`/products/${url_slug || id}`}
-      className="block cursor-pointer"
-    >
-      <Card className={cn(
-        "group relative overflow-hidden transition-all duration-300",
-        "hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5",
-        "bg-card/95 backdrop-blur-sm"
+    <div className={cn(
+      "group relative overflow-hidden rounded-lg border border-white/10 bg-white/5 transition-colors hover:bg-white/10",
+      className
+    )}>
+      {/* Product Image */}
+      <div className={cn(
+        "relative overflow-hidden",
+        isCompact ? "aspect-[4/3]" : "aspect-square"
       )}>
-        <div className={cn(
-          "relative flex gap-4 p-6",
-          isCompact && "p-4"
-        )}>
-          {/* Product Image */}
-          <div className={cn(
-            "relative shrink-0 overflow-hidden rounded-lg bg-black/20",
-            isCompact ? "h-16 w-16" : "h-24 w-24"
-          )}>
-            <Image
-              src={imageSource}
-              alt={name}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              onError={(e) => {
-                const img = e.target as HTMLImageElement
-                img.src = PLACEHOLDER_IMAGE
-              }}
-            />
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-          </div>
+        <Image
+          src={product.image_url || "/images/products/placeholder.svg"}
+          alt={product.name}
+          fill
+          sizes={isCompact 
+            ? "(max-width: 768px) 50vw, 33vw"
+            : "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          }
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          onError={(e) => {
+            const img = e.target as HTMLImageElement
+            img.src = "/images/products/placeholder.svg"
+          }}
+        />
+      </div>
 
-          {/* Product Info */}
-          <div className="min-w-0 flex-1">
-            <h3 className={cn(
-              "truncate font-semibold transition-colors group-hover:text-primary",
-              isCompact ? "text-base" : "text-lg"
-            )}>
-              {name}
-            </h3>
-            <p className={cn(
-              "line-clamp-2 text-sm text-muted-foreground",
-              isCompact && "line-clamp-1 text-xs"
-            )}>
-              {description}
-            </p>
-            <div className="mt-2 flex items-center gap-4 text-sm">
-              <span className="font-medium">
-                ${typeof price === 'number' ? price.toFixed(2) : '0.00'}
-              </span>
-              <span className="text-muted-foreground">
-                {votes.toLocaleString()} votes
-              </span>
-              {rank > 0 && (
-                <span className="text-primary">
-                  Rank #{rank}
-                </span>
-              )}
-            </div>
-          </div>
+      {/* Product Info */}
+      <div className={cn(
+        "space-y-2",
+        isCompact ? "p-3" : "p-4"
+      )}>
+        <Link 
+          href={`/products/${product.url_slug}`}
+          className={cn(
+            "block font-medium hover:underline",
+            isCompact ? "text-base" : "text-lg"
+          )}
+        >
+          {product.name}
+        </Link>
+        <div className="flex items-center gap-2 text-sm text-white/60">
+          <span className="capitalize">{product.category.replace('-', ' ')}</span>
+          <span>•</span>
+          <span>${product.price?.toFixed(2)}</span>
+          {(product.rating ?? 0) > 0 && (
+            <>
+              <span>•</span>
+              <div className="flex items-center gap-1">
+                <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                <span>{(product.rating ?? 0).toFixed(1)}</span>
+                <span>({product.review_count ?? 0})</span>
+              </div>
+            </>
+          )}
         </div>
-      </Card>
-    </Link>
+
+        {/* Vote Buttons */}
+        <VoteButtons 
+          product={{
+            id: product.id,
+            userVote: null, // We'll implement this later with auth
+            upvotes: product.upvotes || 0,
+            downvotes: product.downvotes || 0
+          }}
+          onVote={vote}
+          className={cn(
+            "mt-4",
+            isCompact && "scale-90 origin-left"
+          )}
+        />
+      </div>
+    </div>
   )
 }

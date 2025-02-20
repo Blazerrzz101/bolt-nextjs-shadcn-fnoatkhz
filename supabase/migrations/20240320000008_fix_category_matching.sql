@@ -8,6 +8,7 @@ RETURNS TABLE (
     name TEXT,
     description TEXT,
     category TEXT,
+    category_slug TEXT,
     price DECIMAL,
     image_url TEXT,
     url_slug TEXT,
@@ -32,6 +33,7 @@ BEGIN
         pr.name,
         pr.description,
         pr.category,
+        pr.category_slug,
         pr.price,
         pr.image_url,
         pr.url_slug,
@@ -50,16 +52,19 @@ BEGIN
     FROM product_rankings pr
     WHERE 
         CASE 
-            WHEN p_category IS NOT NULL THEN 
-                LOWER(TRIM(REPLACE(REPLACE(pr.category, ' ', '-'), 'Gaming ', ''))) = 
-                LOWER(TRIM(REPLACE(REPLACE(p_category, ' ', '-'), 'Gaming ', '')))
-            ELSE true
+            WHEN p_category IS NULL THEN true
+            ELSE pr.category_slug = p_category
         END
-    ORDER BY pr.rank ASC;
+    ORDER BY 
+        CASE 
+            WHEN p_category IS NULL THEN pr.category_slug
+            ELSE pr.rank::text
+        END,
+        pr.rank;
 END;
 $$;
 
--- Grant execute permission
+-- Grant execute permissions
 GRANT EXECUTE ON FUNCTION get_product_rankings(TEXT) TO authenticated, anon;
 
 -- Refresh materialized view to ensure data is up to date
