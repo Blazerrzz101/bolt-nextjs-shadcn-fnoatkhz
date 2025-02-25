@@ -36,8 +36,28 @@ export function ProductImage({
   const [error, setError] = useState(false)
   const [loaded, setLoaded] = useState(false)
   
-  const placeholderImage = getPlaceholderImage(category)
-  const imageSource = error || !src ? placeholderImage : src
+  // Get appropriate placeholder image based on category
+  const getAppropriateImage = () => {
+    if (!category) return "/images/products/placeholder.svg";
+    
+    // Map category to placeholder image
+    const categoryMap: Record<string, string> = {
+      "mice": "/images/products/placeholder-mouse.svg",
+      "gaming-mice": "/images/products/placeholder-mouse.svg",
+      "keyboards": "/images/products/placeholder-keyboard.svg",
+      "gaming-keyboards": "/images/products/placeholder-keyboard.svg",
+      "headsets": "/images/products/placeholder-headset.svg",
+      "gaming-headsets": "/images/products/placeholder-headset.svg",
+      "headphones": "/images/products/placeholder-headset.svg",
+      "monitors": "/images/products/placeholder-monitor.svg",
+      "gaming-monitors": "/images/products/placeholder-monitor.svg",
+    };
+    
+    return categoryMap[category.toLowerCase()] || "/images/products/placeholder.svg";
+  };
+  
+  // Use placeholder from constants as fallback, but prefer the SVG files
+  const placeholderImage = error || !src ? getAppropriateImage() : src;
   
   return (
     <div className={cn(
@@ -50,7 +70,7 @@ export function ProductImage({
     >
       {/* Main Image */}
       <Image
-        src={imageSource}
+        src={placeholderImage}
         alt={alt}
         width={!fill ? width : undefined}
         height={!fill ? height : undefined}
