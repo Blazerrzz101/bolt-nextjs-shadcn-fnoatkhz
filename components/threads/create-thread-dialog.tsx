@@ -68,7 +68,7 @@ export function CreateThreadDialog({ open, onOpenChange }: CreateThreadDialogPro
           variant: "destructive"
         })
         onOpenChange(false) // Close the dialog
-        router.push('/auth/sign-in?redirect=back&reason=create_thread')
+        router.push('/auth/sign-in?next=back&reason=create_thread')
         return
       }
       

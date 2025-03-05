@@ -115,7 +115,7 @@ export function VoteButtons({
           label: "Sign In",
           onClick: () => {
             // Route to sign-in page
-            window.location.href = "/auth/sign-in"
+            window.location.href = "/auth/sign-in?next=back&reason=vote_limit"
           }
         }
       })
@@ -165,64 +165,47 @@ export function VoteButtons({
       // Call API to cast vote
       const response = await vote(product, newVoteType)
       
-      if (!response || !response.success) {
-        // Handle error response
-        const errorMsg = response?.error || "Failed to cast vote"
-        setError(errorMsg)
-        console.error("Vote error:", errorMsg)
+      // Handle the response
+      if (response && response.success) {
+        // Update the local state with the actual values from the server
+        setUpvotes(response.upvotes || 0)
+        setDownvotes(response.downvotes || 0)
+        setVoteType(response.voteType)
         
-        toast.error(errorMsg)
-        
-        // Revert optimistic updates
-        setUpvotes(previousUpvotes)
-        setDownvotes(previousDownvotes)
-        setVoteType(previousVoteType)
-      } else {
-        // Handle success
-        // Update with actual server values
-        if (typeof response.upvotes === 'number') {
-          setUpvotes(response.upvotes)
-        }
-        
-        if (typeof response.downvotes === 'number') {
-          setDownvotes(response.downvotes)
-        }
-        
-        // Set the vote type from the response
-        if (response.voteType !== undefined) {
-          setVoteType(response.voteType)
-        }
-        
-        // Show feedback based on the vote action
-        if (isToggle) {
-          toast.success("Vote removed")
-        } else if (previousVoteType !== null) {
-          toast.success("Vote changed")
-        } else {
-          toast.success(newVoteType === 1 ? "Upvoted!" : "Downvoted!")
-        }
-        
-        // Update remaining votes
-        if (response.remainingVotes !== undefined) {
+        // If remaining votes is provided in the response, update it
+        if (typeof response.remainingVotes === 'number') {
           setRemainingVotes(response.remainingVotes)
         }
         
-        // If authenticated, show different message
-        if (user) {
-          // No remaining votes limit for authenticated users
+        // Show toast based on action
+        if (isToggle) {
+          toast.info(`Vote removed`)
+        } else if (previousVoteType !== null && previousVoteType !== newVoteType) {
+          toast.success(`Vote changed to ${newVoteType === 1 ? 'upvote' : 'downvote'}`)
         } else {
-          // Show remaining votes for anonymous users
-          const votesLeft = response.remainingVotes || 0
-          if (votesLeft <= 2) {
-            toast.info(`You have ${votesLeft} ${votesLeft === 1 ? 'vote' : 'votes'} left. Sign in for unlimited voting!`, {
+          toast.success(`${newVoteType === 1 ? 'Upvoted' : 'Downvoted'} ${product.name}`)
+        }
+      } else {
+        // If there was an error or the response indicates failure, revert the optimistic update
+        setVoteType(previousVoteType)
+        setUpvotes(previousUpvotes)
+        setDownvotes(previousDownvotes)
+        
+        // Show error message
+        if (response && response.error) {
+          // If the error is about vote limits, show a specific message
+          if (response.error.includes('maximum votes') || response.error.includes('vote limit')) {
+            toast.error(response.error, {
               action: {
                 label: "Sign In",
-                onClick: () => {
-                  window.location.href = "/auth/sign-in"
-                }
+                onClick: () => window.location.href = "/auth/sign-in?next=back&reason=vote_limit"
               }
             })
+          } else {
+            toast.error(response.error)
           }
+        } else {
+          toast.error("Failed to cast vote. Please try again.")
         }
       }
     } catch (error) {

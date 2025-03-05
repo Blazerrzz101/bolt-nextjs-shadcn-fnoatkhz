@@ -196,7 +196,7 @@ export const useVote = () => {
               
               // Redirect to sign in page
               if (typeof window !== 'undefined') {
-                window.location.href = '/auth/sign-in?redirect=back&reason=vote_limit';
+                window.location.href = '/auth/sign-in?next=back&reason=vote_limit';
               }
               
               return {
@@ -274,7 +274,7 @@ export const useVote = () => {
           
           // Optional: Redirect to sign in page
           if (typeof window !== 'undefined') {
-            window.location.href = '/auth/sign-in?redirect=back&reason=vote_limit';
+            window.location.href = '/auth/sign-in?next=back&reason=vote_limit';
           }
         } else {
           toast({

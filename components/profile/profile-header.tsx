@@ -1,55 +1,60 @@
 "use client"
 
-import { User } from "@supabase/supabase-js"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useUserDetails } from "@/hooks/use-user-details"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
+import { buttonVariants } from "@/components/ui/button"
+import { User, Activity, Settings } from "lucide-react"
 
-interface ProfileHeaderProps {
-  user: User
-}
-
-export function ProfileHeader({ user }: ProfileHeaderProps) {
-  const { data: userDetails, isLoading } = useUserDetails(user.id)
+export function ProfileHeader() {
+  const pathname = usePathname()
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center space-x-4">
-          <Avatar className="h-12 w-12">
-            <AvatarImage src={userDetails?.avatar_url} />
-            <AvatarFallback>
-              {userDetails?.username?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || '?'}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <CardTitle>{userDetails?.username || 'Anonymous User'}</CardTitle>
-            <CardDescription>{user.email}</CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div>
-            <p className="text-sm font-medium">Member since</p>
-            <p className="text-sm text-muted-foreground">
-              {userDetails?.created_at ? new Date(userDetails.created_at).toLocaleDateString() : 'Unknown'}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm font-medium">Last seen</p>
-            <p className="text-sm text-muted-foreground">
-              {userDetails?.last_seen ? new Date(userDetails.last_seen).toLocaleDateString() : 'Unknown'}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm font-medium">Status</p>
-            <p className="text-sm text-muted-foreground">
-              {userDetails?.is_online ? 'Online' : 'Offline'}
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="border-b mb-6">
+      <div className="container py-4">
+        <h1 className="text-2xl font-bold mb-4">Your Account</h1>
+        <nav className="flex space-x-4 pb-2">
+          <Link
+            href="/profile"
+            className={cn(
+              buttonVariants({ 
+                variant: pathname === "/profile" ? "default" : "ghost",
+                size: "sm"
+              }),
+              "flex items-center gap-1.5"
+            )}
+          >
+            <User className="h-4 w-4" />
+            <span>Profile</span>
+          </Link>
+          <Link
+            href="/activities"
+            className={cn(
+              buttonVariants({ 
+                variant: pathname === "/activities" ? "default" : "ghost",
+                size: "sm"
+              }),
+              "flex items-center gap-1.5"
+            )}
+          >
+            <Activity className="h-4 w-4" />
+            <span>Activities</span>
+          </Link>
+          <Link
+            href="/settings"
+            className={cn(
+              buttonVariants({ 
+                variant: pathname === "/settings" ? "default" : "ghost",
+                size: "sm"
+              }),
+              "flex items-center gap-1.5"
+            )}
+          >
+            <Settings className="h-4 w-4" />
+            <span>Settings</span>
+          </Link>
+        </nav>
+      </div>
+    </div>
   )
 }

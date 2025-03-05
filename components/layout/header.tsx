@@ -1,16 +1,37 @@
 "use client"
 
+import { useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 import { AuthNav } from "@/components/auth/auth-nav"
 import { UserNav } from "@/components/auth/user-nav"
-import { useAuth } from "@/hooks/use-auth"
+import { useEnhancedAuth } from "@/components/auth/auth-provider"
 
 export function Header() {
   const pathname = usePathname()
-  const { user } = useAuth()
+  const { user, isAuthenticated, isLoading } = useEnhancedAuth()
+  
+  // Enhanced debug logs
+  useEffect(() => {
+    console.log("Header: Authentication state updated", { 
+      user: user ? {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        isAnonymous: user.isAnonymous
+      } : null, 
+      isAuthenticated,
+      isLoading
+    })
+  }, [user, isAuthenticated, isLoading])
+  
+  console.log("Header: Current auth state on render", { 
+    hasUser: !!user, 
+    isAuthenticated, 
+    isAnonymous: user?.isAnonymous 
+  })
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/50 backdrop-blur-xl">
@@ -52,7 +73,7 @@ export function Header() {
           </Link>
         </nav>
         <div className="ml-auto flex items-center space-x-4">
-          {user ? <UserNav /> : <AuthNav />}
+          {isAuthenticated ? <UserNav /> : <AuthNav />}
         </div>
       </div>
     </header>
