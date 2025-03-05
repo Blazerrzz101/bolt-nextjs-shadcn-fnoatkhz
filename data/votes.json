@@ -17,11 +17,13 @@
     "test-client-limit:test-product-3": 1,
     "test-client-limit:test-product-4": 1,
     "test-client-limit:test-product-5": 1,
-    "6256cpva8yt_1740526035162:j1k2l3m4-n5o6-p7q8-r9s0-t1u2v3w4x5y6": 1
+    "6256cpva8yt_1740526035162:j1k2l3m4-n5o6-p7q8-r9s0-t1u2v3w4x5y6": 1,
+    "test-1740447161036:j1k2l3m4-n5o6-p7q8-r9s0-t1u2v3w4x5y6": 1,
+    "test-1740447161036:z1x2c3v4-b5n6-m7k8-j9h0-g1f2d3s4a5": 1
   },
   "voteCounts": {
     "j1k2l3m4-n5o6-p7q8-r9s0-t1u2v3w4x5y6": {
-      "upvotes": 4,
+      "upvotes": 5,
       "downvotes": 0
     },
     "c8d9e0f1-2a3b-4c5d-6e7f-8g9h0i1j2k3l": {
@@ -41,7 +43,7 @@
       "downvotes": 0
     },
     "z1x2c3v4-b5n6-m7k8-j9h0-g1f2d3s4a5": {
-      "upvotes": 1,
+      "upvotes": 2,
       "downvotes": 0
     },
     "p9o8i7u6-y5t4-r3e2-w1q0-z9x8c7v6b5": {
@@ -85,7 +87,7 @@
       "downvotes": 0
     }
   },
-  "lastUpdated": "2025-03-03T09:23:05.041Z",
+  "lastUpdated": "2025-03-05T06:58:29.424Z",
   "userVotes": [
     {
       "productId": "j1k2l3m4-n5o6-p7q8-r9s0-t1u2v3w4x5y6",
@@ -278,6 +280,30 @@
       "clientId": "6256cpva8yt_1740526035162",
       "voteType": 1,
       "timestamp": "2025-03-03T09:23:05.041Z"
+    },
+    {
+      "productId": "j1k2l3m4-n5o6-p7q8-r9s0-t1u2v3w4x5y6",
+      "clientId": "test-1740447161036",
+      "voteType": 1,
+      "timestamp": "2025-03-04T04:25:55.175Z"
+    },
+    {
+      "productId": "z1x2c3v4-b5n6-m7k8-j9h0-g1f2d3s4a5",
+      "clientId": "test-1740447161036",
+      "voteType": 1,
+      "timestamp": "2025-03-05T00:35:01.204Z"
+    },
+    {
+      "productId": "j1k2l3m4-n5o6-p7q8-r9s0-t1u2v3w4x5y6",
+      "clientId": "l5dgwpj1hni_1741135060950",
+      "voteType": 1,
+      "timestamp": "2025-03-05T06:58:23.949Z"
+    },
+    {
+      "productId": "j1k2l3m4-n5o6-p7q8-r9s0-t1u2v3w4x5y6",
+      "clientId": "l5dgwpj1hni_1741135060950",
+      "voteType": 0,
+      "timestamp": "2025-03-05T06:58:29.424Z"
     }
   ]
 }

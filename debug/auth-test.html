@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auth Debugger</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    button {
+      background: #0070f3;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+    button:hover {
+      background: #0060df;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .error {
+      background: #fff5f5;
+      color: #e53e3e;
+      padding: 8px;
+      border-radius: 4px;
+      margin-top: 8px;
+    }
+    .success {
+      background: #f0fff4;
+      color: #38a169;
+      padding: 8px;
+      border-radius: 4px;
+      margin-top: 8px;
+    }
+    input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      width: 250px;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+    }
+    h2 {
+      margin-top: 24px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Authentication Debugger</h1>
+  
+  <div class="card">
+    <h2>Current Authentication Status</h2>
+    <div id="auth-status">Loading...</div>
+    <button onclick="checkAuthStatus()">Refresh Status</button>
+  </div>
+  
+  <div class="card">
+    <h2>Fix Authentication</h2>
+    <div>
+      <label for="email">Email:</label>
+      <input type="email" id="email" value="test@example.com" />
+    </div>
+    <div>
+      <label for="name">Name:</label>
+      <input type="text" id="name" value="Test User" />
+    </div>
+    <button onclick="setAuthenticated()">Set as Authenticated</button>
+    <button onclick="clearAuth()">Clear Auth Data</button>
+  </div>
+  
+  <div class="card">
+    <h2>Navigation</h2>
+    <button onclick="window.location.href = '/'">Go to Home</button>
+    <button onclick="window.location.href = '/profile'">Go to Profile</button>
+    <button onclick="window.location.href = '/auth/sign-in'">Go to Sign In</button>
+  </div>
+  
+  <div class="card">
+    <h2>LocalStorage Contents</h2>
+    <pre id="storage-contents">Loading...</pre>
+    <button onclick="refreshStorageContents()">Refresh</button>
+  </div>
+
+  <script>
+    // Check authentication status
+    function checkAuthStatus() {
+      const statusElement = document.getElementById('auth-status');
+      statusElement.innerHTML = 'Checking...';
+      
+      try {
+        const authUser = localStorage.getItem('authUser');
+        
+        if (!authUser) {
+          statusElement.innerHTML = '<div class="error">Not authenticated: No authUser found in localStorage</div>';
+          return;
+        }
+        
+        const user = JSON.parse(authUser);
+        const isAnonymous = user.isAnonymous === true || user.isAnonymous === 'true';
+        
+        if (isAnonymous) {
+          statusElement.innerHTML = `
+            <div class="error">
+              Anonymous user detected.<br>
+              User ID: ${user.id}<br>
+              IsAnonymous: ${user.isAnonymous} (${typeof user.isAnonymous})
+            </div>
+          `;
+        } else {
+          statusElement.innerHTML = `
+            <div class="success">
+              Authenticated as: ${user.name || user.email || user.id}<br>
+              Email: ${user.email || 'N/A'}<br>
+              User ID: ${user.id}<br>
+              IsAnonymous: ${user.isAnonymous} (${typeof user.isAnonymous})
+            </div>
+          `;
+        }
+      } catch (error) {
+        statusElement.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+      }
+    }
+    
+    // Set user as authenticated
+    function setAuthenticated() {
+      try {
+        const email = document.getElementById('email').value;
+        const name = document.getElementById('name').value;
+        
+        if (!email) {
+          alert('Please enter an email address');
+          return;
+        }
+        
+        const user = {
+          id: `user_${Math.random().toString(36).substring(2, 10)}`,
+          email: email,
+          name: name || email.split('@')[0],
+          avatar_url: `https://avatar.vercel.sh/${email.split('@')[0]}`,
+          isAnonymous: false
+        };
+        
+        localStorage.setItem('authUser', JSON.stringify(user));
+        refreshStorageContents();
+        checkAuthStatus();
+        
+        alert('Authentication data set successfully!');
+      } catch (error) {
+        alert(`Error setting authentication: ${error.message}`);
+      }
+    }
+    
+    // Clear authentication data
+    function clearAuth() {
+      localStorage.removeItem('authUser');
+      refreshStorageContents();
+      checkAuthStatus();
+      alert('Authentication data cleared!');
+    }
+    
+    // Refresh localStorage contents display
+    function refreshStorageContents() {
+      const storageElement = document.getElementById('storage-contents');
+      
+      try {
+        const authUser = localStorage.getItem('authUser');
+        const clientId = localStorage.getItem('tierd_client_id');
+        
+        let content = '';
+        
+        if (authUser) {
+          content += `// authUser\n${JSON.stringify(JSON.parse(authUser), null, 2)}\n\n`;
+        } else {
+          content += '// authUser\nnull\n\n';
+        }
+        
+        if (clientId) {
+          content += `// tierd_client_id\n"${clientId}"`;
+        } else {
+          content += '// tierd_client_id\nnull';
+        }
+        
+        storageElement.textContent = content;
+      } catch (error) {
+        storageElement.textContent = `Error: ${error.message}`;
+      }
+    }
+    
+    // Initialize
+    window.onload = function() {
+      checkAuthStatus();
+      refreshStorageContents();
+    };
+  </script>
+</body>
+</html> 
