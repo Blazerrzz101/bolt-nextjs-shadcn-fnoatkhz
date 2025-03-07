@@ -2,13 +2,13 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Icons } from "@/components/icons"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/client"
 
 // Get or create client ID from local storage
 const getClientId = () => {
@@ -23,13 +23,21 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const router = useRouter()
-  const supabase = createClientComponentClient()
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setIsLoading(true)
 
     try {
+      const supabase = createClient()
+      if (!supabase) {
+        toast.error("Cannot sign up in offline mode", {
+          description: "Please try again when online."
+        })
+        setIsLoading(false)
+        return
+      }
+
       const clientId = getClientId()
       const metadata = clientId ? { client_id: clientId } : {}
 
@@ -65,6 +73,14 @@ export default function SignUpPage() {
 
   const handleOAuthSignIn = async (provider: 'github' | 'google') => {
     try {
+      const supabase = createClient()
+      if (!supabase) {
+        toast.error("Cannot sign in with OAuth in offline mode", {
+          description: "Please try again when online."
+        })
+        return
+      }
+
       const clientId = getClientId()
       const queryParams: Record<string, string> = {}
       if (clientId) {

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client"
 
 interface ProfileSettingsProps {
   userId: string
@@ -23,6 +23,16 @@ export function ProfileSettings({ userId, initialUsername }: ProfileSettingsProp
   const handleUpdateProfile = async () => {
     try {
       setIsLoading(true)
+      
+      const supabase = createClient()
+      if (!supabase) {
+        toast({
+          title: "Offline Mode",
+          description: "Profile updates are not available in offline mode.",
+          variant: "destructive",
+        })
+        return
+      }
 
       const { error } = await supabase
         .from('user_details')
@@ -52,6 +62,17 @@ export function ProfileSettings({ userId, initialUsername }: ProfileSettingsProp
   const handleSignOut = async () => {
     try {
       setIsLoading(true)
+      
+      const supabase = createClient()
+      if (!supabase) {
+        toast({
+          title: "Offline Mode",
+          description: "Sign out is not available in offline mode.",
+          variant: "destructive",
+        })
+        return
+      }
+      
       const { error } = await supabase.auth.signOut()
       if (error) throw error
       

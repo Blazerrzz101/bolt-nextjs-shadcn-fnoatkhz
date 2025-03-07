@@ -1,14 +1,12 @@
 import { Suspense } from "react"
 import { MainLayout } from "@/components/home/main-layout"
 import { ProductInfoContent } from "./product-info-content"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
-import { Database } from "@/lib/supabase/database.types"
+import { createServerClient } from "@/lib/supabase/server"
 
 export const dynamic = 'force-dynamic'
 
 export default async function ProductInfoPage() {
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = createServerClient()
   
   const { data: products } = await supabase
     .from('products')

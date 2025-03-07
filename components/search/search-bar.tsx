@@ -5,7 +5,7 @@ import { Search, Filter, X, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { motion, AnimatePresence } from "framer-motion"
 import { useDebounce } from "@/app/hooks/use-debounce"
-import { supabase } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { fuzzySearch, highlightMatches } from "@/lib/search/fuzzy-search"
 import { CATEGORY_IDS } from "@/lib/constants"
@@ -55,6 +55,38 @@ export function SearchBar({ onSearch }: SearchBarProps) {
 
       setIsLoading(true)
       try {
+        const supabase = createClient()
+        
+        // Use mock data if supabase client isn't available
+        if (!supabase) {
+          console.log('Using mock search suggestions')
+          const mockProducts = [
+            { id: 'mock1', name: 'Gaming Mouse Pro', category: 'Gaming Mice', votes: 120 },
+            { id: 'mock2', name: 'Mechanical Gaming Keyboard', category: 'Gaming Keyboards', votes: 95 },
+            { id: 'mock3', name: 'Ultra HD Gaming Monitor', category: 'Gaming Monitors', votes: 87 },
+            { id: 'mock4', name: 'Wireless Gaming Headset', category: 'Gaming Headsets', votes: 76 },
+            { id: 'mock5', name: 'Ergonomic Gaming Chair', category: 'Gaming Chairs', votes: 65 }
+          ];
+          
+          // Perform client-side fuzzy search
+          const results = fuzzySearch(mockProducts, debouncedQuery, 'name');
+          
+          const filteredResults = selectedCategories.length > 0
+            ? results.filter(item => selectedCategories.includes(item.category))
+            : results;
+            
+          setSuggestions(filteredResults.map(item => ({
+            ...item,
+            highlight: {
+              start: item.name.toLowerCase().indexOf(debouncedQuery.toLowerCase()),
+              end: item.name.toLowerCase().indexOf(debouncedQuery.toLowerCase()) + debouncedQuery.length
+            }
+          })));
+          
+          setIsLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase
           .from('products')
           .select('id, name, category, votes')

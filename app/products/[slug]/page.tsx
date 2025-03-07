@@ -1,11 +1,13 @@
 "use client"
 
 import { Suspense } from "react"
-import { useProduct } from "@/hooks/use-product"
+import { products as mockProducts } from "@/lib/data"
 import { ProductDetails } from "@/components/products/product-details"
 import { ProductSkeleton } from "@/components/products/product-skeleton"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { notFound } from "next/navigation"
+import { generateSlug } from "@/lib/utils"
+import { Product } from "@/types"
 
 interface ProductPageProps {
   params: {
@@ -14,26 +16,40 @@ interface ProductPageProps {
 }
 
 export default function ProductPage({ params }: ProductPageProps) {
-  const { data: product, isLoading, error } = useProduct(params.slug, true)
+  // For static builds, use mock data
+  const findMockProduct = (): Product | undefined => {
+    const product = mockProducts.find(
+      p => p.url_slug === params.slug || generateSlug(p.name) === params.slug
+    );
+    
+    if (!product) return undefined;
+    
+    return {
+      id: product.id,
+      name: product.name,
+      description: product.description || '',
+      category: product.category,
+      price: product.price || 0,
+      imageUrl: product.image_url || '',
+      rank: product.rank || 0,
+      upvotes: product.upvotes || 0,
+      downvotes: product.downvotes || 0,
+      userVote: null,
+      specs: product.specifications || {},
+      url_slug: product.url_slug
+    };
+  };
 
-  if (error) {
-    console.error('Product page error:', error)
-    return notFound()
-  }
-
-  if (!isLoading && !product) {
-    console.error('Product not found:', params.slug)
-    return notFound()
+  const product = findMockProduct();
+  
+  if (!product) {
+    return notFound();
   }
 
   return (
     <ErrorBoundary>
       <Suspense fallback={<ProductSkeleton />}>
-        {isLoading ? (
-          <ProductSkeleton />
-        ) : product ? (
-          <ProductDetails product={product} />
-        ) : null}
+        <ProductDetails product={product} />
       </Suspense>
     </ErrorBoundary>
   )

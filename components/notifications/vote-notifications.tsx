@@ -1,139 +1,163 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { supabase } from "@/lib/supabase/client"
-import { TrendingUp, Award, ThumbsUp } from "lucide-react"
-
-interface VoteNotification {
-  id: string
-  type: "vote" | "rank_change"
-  productName: string
-  message: string
-  timestamp: number
-}
+import { createClient } from "@/lib/supabase/client"
+import { useEnhancedAuth } from "@/components/auth/auth-provider"
+import { Bell } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Separator } from "@/components/ui/separator"
 
 export function VoteNotifications() {
-  const [notifications, setNotifications] = useState<VoteNotification[]>([])
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const { user } = useEnhancedAuth()
 
   useEffect(() => {
-    // Subscribe to product vote changes
-    const voteSubscription = supabase
-      .channel('vote_notifications')
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'products',
-        filter: 'votes > 0'
-      }, async (payload) => {
-        const { data: product } = await supabase
-          .from('products')
-          .select('name')
-          .eq('id', payload.new.id)
-          .single()
+    // Only subscribe to notifications if user is authenticated
+    if (!user || user.isAnonymous) return
 
-        if (!product) return
-
-        const voteDiff = payload.new.votes - (payload.old?.votes || 0)
-        if (voteDiff <= 0) return
-
-        const notification: VoteNotification = {
-          id: `vote-${Date.now()}`,
-          type: "vote",
-          productName: product.name,
-          message: `${voteDiff} new ${voteDiff === 1 ? 'vote' : 'votes'}`,
-          timestamp: Date.now()
+    let subscription: any = null
+    
+    const setupSubscription = async () => {
+      try {
+        const supabase = createClient()
+        
+        // Check if supabase client is available (for build-time safety)
+        if (!supabase) {
+          console.error("Supabase client not available")
+          return
         }
-
-        setNotifications(prev => [notification, ...prev].slice(0, 5))
-      })
-      .subscribe()
-
-    // Subscribe to ranking changes
-    const rankSubscription = supabase
-      .channel('rank_notifications')
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'product_rankings',
-        filter: 'rank <= 3'
-      }, async (payload) => {
-        const { data: product } = await supabase
-          .from('products')
-          .select('name')
-          .eq('id', payload.new.product_id)
-          .single()
-
-        if (!product) return
-
-        const rankChange = (payload.old?.rank || 99) - payload.new.rank
-        if (rankChange <= 0) return
-
-        const notification: VoteNotification = {
-          id: `rank-${Date.now()}`,
-          type: "rank_change",
-          productName: product.name,
-          message: `moved up to rank #${payload.new.rank}!`,
-          timestamp: Date.now()
+        
+        // First, fetch existing notifications
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(5)
+          
+        if (error) {
+          console.error('Error fetching notifications:', error)
+        } else {
+          setNotifications(data || [])
+          setUnreadCount(data?.filter(n => !n.read).length || 0)
         }
-
-        setNotifications(prev => [notification, ...prev].slice(0, 5))
-      })
-      .subscribe()
-
-    // Cleanup
-    return () => {
-      voteSubscription.unsubscribe()
-      rankSubscription.unsubscribe()
+        
+        // Subscribe to new notifications
+        subscription = supabase
+          .channel('notifications')
+          .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`,
+          }, (payload) => {
+            // Update notifications
+            setNotifications(current => [payload.new, ...current].slice(0, 5))
+            setUnreadCount(count => count + 1)
+          })
+          .subscribe()
+          
+      } catch (err) {
+        console.error('Error setting up notification subscription:', err)
+      }
     }
-  }, [])
-
-  // Remove notifications after 5 seconds
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = Date.now()
-      setNotifications(prev => 
-        prev.filter(n => now - n.timestamp < 5000)
-      )
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [])
+    
+    setupSubscription()
+    
+    // Cleanup subscription when component unmounts
+    return () => {
+      if (subscription) {
+        const supabase = createClient()
+        if (supabase) {
+          supabase.channel('notifications').unsubscribe()
+        }
+      }
+    }
+  }, [user])
+  
+  const markAsRead = async () => {
+    if (!user || notifications.length === 0) return
+    
+    try {
+      const supabase = createClient()
+      
+      if (!supabase) return
+      
+      // Mark all as read
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        
+      if (error) {
+        console.error('Error marking notifications as read:', error)
+      } else {
+        // Update local state
+        setNotifications(current => 
+          current.map(n => ({ ...n, read: true }))
+        )
+        setUnreadCount(0)
+      }
+    } catch (err) {
+      console.error('Error marking notifications as read:', err)
+    }
+  }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 space-y-2">
-      <AnimatePresence>
-        {notifications.map(notification => (
-          <motion.div
-            key={notification.id}
-            initial={{ opacity: 0, x: 100, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 100, scale: 0.9 }}
-            className="flex items-center gap-3 rounded-lg border border-white/10 bg-black/90 px-4 py-3 
-                       backdrop-blur-lg shadow-lg"
-          >
-            <div className={`rounded-full p-2 ${
-              notification.type === "vote" 
-                ? "bg-[#ff4b26]/20 text-[#ff4b26]"
-                : "bg-amber-500/20 text-amber-500"
-            }`}>
-              {notification.type === "vote" ? (
-                <ThumbsUp className="h-4 w-4" />
-              ) : (
-                <Award className="h-4 w-4" />
-              )}
-            </div>
-            <div className="flex flex-col">
-              <span className="font-medium text-white">
-                {notification.productName}
-              </span>
-              <span className="text-sm text-white/70">
-                {notification.message}
-              </span>
-            </div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
-    </div>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+              {unreadCount}
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80" align="end">
+        <div className="flex items-center justify-between">
+          <h4 className="font-medium">Notifications</h4>
+          {unreadCount > 0 && (
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={markAsRead}
+              className="h-auto text-xs p-1"
+            >
+              Mark all as read
+            </Button>
+          )}
+        </div>
+        <Separator className="my-2" />
+        {notifications.length > 0 ? (
+          <div className="space-y-2">
+            {notifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={`p-2 rounded-md ${
+                  !notification.read ? "bg-muted/50" : ""
+                }`}
+              >
+                <p className="text-sm">{notification.message}</p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(notification.created_at).toLocaleDateString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-center py-4 text-muted-foreground">
+            No notifications yet
+          </p>
+        )}
+      </PopoverContent>
+    </Popover>
   )
 } 

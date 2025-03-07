@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { supabase } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Button } from "@/components/ui/button"
 import { MessageSquarePlus } from "lucide-react"
@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation"
 import { formatTimeAgo } from "@/lib/utils"
 import { ThreadCard } from "@/components/threads/thread-card"
 import { Thread } from "@/types/thread"
+import { Product } from "@/types/product"
 
 interface ProductThreadsProps {
   productId: string
@@ -40,6 +41,28 @@ export function ProductThreads({ productId, threads: initialThreads }: ProductTh
   const { data: product } = useQuery({
     queryKey: ["product", productId],
     queryFn: async () => {
+      const supabase = createClient()
+      
+      // Return mock data if supabase client isn't available
+      if (!supabase) {
+        console.log('Using mock product data')
+        return {
+          id: productId,
+          name: "Sample Product",
+          description: "This is a sample product description",
+          slug: "sample-product",
+          category: "keyboard",
+          image_url: "/images/products/placeholder-keyboard.svg",
+          price: 99.99,
+          specifications: {},
+          upvotes: 10,
+          downvotes: 2,
+          score: 8,
+          rank: 1,
+          severity: "medium"
+        } as Product;
+      }
+
       const { data, error } = await supabase
         .from("products")
         .select("*")
@@ -55,6 +78,47 @@ export function ProductThreads({ productId, threads: initialThreads }: ProductTh
     queryKey: ["product-threads", productId],
     queryFn: async () => {
       if (initialThreads) return initialThreads
+
+      const supabase = createClient()
+      
+      // Return mock data if supabase client isn't available
+      if (!supabase) {
+        console.log('Using mock threads data')
+        return [
+          {
+            id: '1',
+            title: 'What do you think about the durability?',
+            content: 'I\'ve been using this product for a month and I\'m concerned about its long-term durability. Has anyone had it for longer?',
+            created_at: new Date(Date.now() - 86400000 * 5).toISOString(), // 5 days ago
+            user: {
+              id: 'user1',
+              username: 'durabilityexpert',
+              avatar_url: null
+            },
+            product_id: productId,
+            _count: {
+              replies: 3,
+              votes: 5
+            }
+          },
+          {
+            id: '2',
+            title: 'Feature request for next version',
+            content: 'I think the next version should include better RGB controls. The current software is limited.',
+            created_at: new Date(Date.now() - 86400000 * 10).toISOString(), // 10 days ago
+            user: {
+              id: 'user2',
+              username: 'rgbfanatic',
+              avatar_url: null
+            },
+            product_id: productId,
+            _count: {
+              replies: 7,
+              votes: 12
+            }
+          }
+        ];
+      }
 
       const { data, error } = await supabase
         .from("threads")

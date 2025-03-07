@@ -1,0 +1,54 @@
+{
+  "activities": [
+    {
+      "id": "act-1",
+      "type": "vote",
+      "action": "upvote",
+      "productId": "p1",
+      "productName": "Gaming Mouse X1",
+      "timestamp": "2023-03-06T08:30:00.000Z",
+      "details": "Upvoted Gaming Mouse X1",
+      "userId": "user-1"
+    },
+    {
+      "id": "act-2",
+      "type": "vote",
+      "action": "downvote",
+      "productId": "p2",
+      "productName": "Gaming Keyboard K2",
+      "timestamp": "2023-03-06T09:15:00.000Z",
+      "details": "Downvoted Gaming Keyboard K2",
+      "userId": "user-1"
+    },
+    {
+      "id": "act-3",
+      "type": "comment",
+      "action": "comment",
+      "productId": "p3",
+      "productName": "Gaming Headset H3",
+      "timestamp": "2023-03-06T10:20:00.000Z",
+      "details": "Commented on Gaming Headset H3",
+      "userId": "user-2"
+    },
+    {
+      "id": "act-4",
+      "type": "review",
+      "action": "review",
+      "productId": "p4",
+      "productName": "Gaming Monitor M4",
+      "timestamp": "2023-03-06T12:45:00.000Z",
+      "details": "Reviewed Gaming Monitor M4",
+      "userId": "user-3"
+    },
+    {
+      "id": "act-5",
+      "type": "vote",
+      "action": "upvote",
+      "productId": "p5",
+      "productName": "Gaming Chair C5",
+      "timestamp": "2023-03-07T08:10:00.000Z",
+      "details": "Upvoted Gaming Chair C5",
+      "userId": "user-2"
+    }
+  ]
+}

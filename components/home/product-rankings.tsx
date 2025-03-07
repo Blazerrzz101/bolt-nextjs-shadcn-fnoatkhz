@@ -102,7 +102,7 @@ export function ProductRankings() {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <p className="text-lg font-medium text-destructive">Error loading products</p>
-        <p className="text-sm text-muted-foreground">{error}</p>
+        <p className="text-sm text-muted-foreground">{error instanceof Error ? error.message : String(error)}</p>
         <Button 
           variant="outline" 
           onClick={() => fetchProducts(selectedCategory === 'all' ? undefined : selectedCategory)}

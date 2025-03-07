@@ -8,7 +8,7 @@ import { Product } from "@/types/product"
 import { Star, ExternalLink, ArrowUpRight, Zap } from "lucide-react"
 
 interface ProductCardProps {
-  product: Product
+  product: Partial<Product>
   size?: "sm" | "md" | "lg"
 }
 
@@ -32,13 +32,23 @@ export function ProductCard({ product, size = "md" }: ProductCardProps) {
     lg: "text-xl",
   }
 
-  // Calculate score
+  if (!product || !product.id) {
+    return null;
+  }
+
+  // Calculate score with fallbacks
   const score = (product.upvotes || 0) - (product.downvotes || 0);
 
   // Ensure price is formatted correctly
   const formattedPrice = typeof product.price === 'number'
     ? `$${product.price.toFixed(2)}`
     : 'Price unavailable'
+
+  // Provide slug fallback
+  const productSlug = product.url_slug || product.slug || `product-${product.id}`;
+
+  // Category fallback
+  const categoryName = product.category || 'uncategorized';
 
   return (
     <Card className={`modern-card relative group overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/30 hover:translate-y-[-3px] ${cardStyles[size]}`}>
@@ -50,7 +60,7 @@ export function ProductCard({ product, size = "md" }: ProductCardProps) {
         </div>
       )}
       
-      <Link href={`/products/${product.url_slug}`} className="block h-full">
+      <Link href={`/products/${productSlug}`} className="block h-full">
         <div className="flex h-full flex-col space-y-4">
           <div className="relative mx-auto flex items-center justify-center">
             {/* Spotlight effect */}
@@ -60,8 +70,8 @@ export function ProductCard({ product, size = "md" }: ProductCardProps) {
             <div className="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-white/5 to-transparent p-2">
               <ProductImage
                 src={product.image_url || '/images/products/placeholder.png'}
-                alt={product.name}
-                category={product.category}
+                alt={product.name || 'Product'}
+                category={categoryName}
                 width={size === 'sm' ? 144 : size === 'md' ? 176 : 208}
                 height={size === 'sm' ? 144 : size === 'md' ? 176 : 208}
                 className={`object-contain transition-transform duration-300 group-hover:scale-105 ${imageStyles[size]}`}
@@ -80,23 +90,23 @@ export function ProductCard({ product, size = "md" }: ProductCardProps) {
           <div className="flex flex-col space-y-3 mt-auto">
             <div className="space-y-1">
               <h3 className={`font-semibold line-clamp-2 group-hover:text-primary transition-colors ${titleStyles[size]}`}>
-                {product.name}
+                {product.name || 'Unnamed Product'}
               </h3>
               
               <div className="text-xs text-muted-foreground line-clamp-2 min-h-[2.5rem]">
-                {product.description}
+                {product.description || 'No description available'}
               </div>
             </div>
             
             <div className="flex items-center gap-2 text-xs">
               <span className="capitalize bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                {product.category.replace('-', ' ')}
+                {categoryName.replace('-', ' ')}
               </span>
               
-              {product.rating > 0 && (
+              {(product.rating || 0) > 0 && (
                 <div className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-full">
                   <Star className="h-3 w-3 fill-secondary text-secondary" />
-                  <span className="font-medium">{product.rating.toFixed(1)}</span>
+                  <span className="font-medium">{(product.rating || 0).toFixed(1)}</span>
                 </div>
               )}
             </div>
@@ -107,7 +117,7 @@ export function ProductCard({ product, size = "md" }: ProductCardProps) {
               <div className="flex items-center gap-2">
                 <div className="bg-card-background backdrop-blur-sm rounded-lg p-1 border border-white/5 shadow-inner">
                   <VoteButtons 
-                    product={{ id: product.id, name: product.name }}
+                    product={{ id: product.id, name: product.name || 'Product' }}
                     initialUpvotes={product.upvotes || 0}
                     initialDownvotes={product.downvotes || 0}
                     initialVoteType={typeof product.userVote === 'number' ? product.userVote : null}

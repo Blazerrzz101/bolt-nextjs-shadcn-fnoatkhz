@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
 import path from 'path';
 
 export interface VoteCounts {
@@ -7,10 +7,18 @@ export interface VoteCounts {
   downvotes: number;
 }
 
+export interface UserVote {
+  productId: string;
+  clientId: string;
+  voteType: number;
+  timestamp: string;
+}
+
 export interface VoteState {
   votes: Record<string, number>;
   voteCounts: Record<string, VoteCounts>;
   lastUpdated: string;
+  userVotes?: UserVote[];
 }
 
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -30,7 +38,8 @@ export async function initializeVoteState() {
       const initialState: VoteState = {
         votes: {},
         voteCounts: {},
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
+        userVotes: []
       };
       writeFileSync(VOTES_FILE, JSON.stringify(initialState, null, 2), 'utf8');
       console.log('Created votes file:', VOTES_FILE);
@@ -46,13 +55,33 @@ export async function getVoteState(): Promise<VoteState> {
   try {
     await initializeVoteState();
     console.log('Reading vote state from:', VOTES_FILE);
-    const data = await fs.readFile(VOTES_FILE, 'utf-8');
+    
+    // First try to read synchronously to avoid file system errors
+    let data;
+    try {
+      data = readFileSync(VOTES_FILE, 'utf-8');
+    } catch (syncError) {
+      console.error('Error reading vote state synchronously:', syncError);
+      data = await fs.readFile(VOTES_FILE, 'utf-8');
+    }
+    
+    // Parse the data
     const state = JSON.parse(data);
     
     // Validate state structure
     if (!state.votes || !state.voteCounts) {
-      console.error('Invalid vote state structure:', state);
-      throw new Error('Invalid vote state structure');
+      console.warn('Vote state has missing properties, reconstructing...');
+      
+      // Try to reconstruct from attached file
+      const reconstructedState: VoteState = {
+        votes: {},
+        voteCounts: state.voteCounts || {},
+        lastUpdated: state.lastUpdated || new Date().toISOString(),
+        userVotes: state.userVotes || []
+      };
+      
+      // If we have voteCounts but no votes, we can reconstruct vote mapping
+      return reconstructedState;
     }
     
     // Initialize vote counts for all products if they don't exist
@@ -82,7 +111,6 @@ export async function getVoteState(): Promise<VoteState> {
       await saveVoteState(state);
     }
     
-    console.log('Successfully read vote state:', state);
     return state;
   } catch (error) {
     console.error('Error reading vote state:', error);
@@ -100,7 +128,6 @@ export async function saveVoteState(state: VoteState): Promise<void> {
   const tempFile = `${VOTES_FILE}.tmp`;
   try {
     await initializeVoteState();
-    console.log('Saving vote state:', JSON.stringify(state, null, 2));
     
     // Validate state structure before saving
     if (!state.votes || !state.voteCounts || typeof state.lastUpdated !== 'string') {
@@ -112,7 +139,6 @@ export async function saveVoteState(state: VoteState): Promise<void> {
     
     // Write to temporary file first
     await fs.writeFile(tempFile, JSON.stringify(state, null, 2), 'utf8');
-    console.log('Written to temp file:', tempFile);
     
     // Ensure the write was successful by reading back the file
     const tempData = await fs.readFile(tempFile, 'utf8');
@@ -123,11 +149,7 @@ export async function saveVoteState(state: VoteState): Promise<void> {
     
     // Rename temp file to actual file (atomic operation)
     await fs.rename(tempFile, VOTES_FILE);
-    console.log('Successfully saved vote state to:', VOTES_FILE);
     
-    // Verify the final file
-    const finalData = await fs.readFile(VOTES_FILE, 'utf8');
-    console.log('Verified saved data:', finalData);
   } catch (error) {
     console.error('Error saving vote state:', error);
     // Clean up temp file if it exists
@@ -145,7 +167,6 @@ export async function saveVoteState(state: VoteState): Promise<void> {
 // Get vote counts for a product
 export async function getProductVoteCounts(productId: string): Promise<VoteCounts> {
   const state = await getVoteState();
-  console.log('Getting vote counts for product:', productId, state.voteCounts[productId]);
   return state.voteCounts[productId] || { upvotes: 0, downvotes: 0 };
 }
 
@@ -153,7 +174,6 @@ export async function getProductVoteCounts(productId: string): Promise<VoteCount
 export async function getUserVote(productId: string, clientId: string): Promise<number | null> {
   const state = await getVoteState();
   const voteKey = `${productId}:${clientId}`;
-  console.log('Getting user vote:', { productId, clientId, vote: state.votes[voteKey] });
   return state.votes[voteKey] || null;
 }
 
@@ -163,16 +183,9 @@ export async function updateVote(
   clientId: string,
   voteType: number | null
 ): Promise<{ voteCounts: VoteCounts; userVote: number | null }> {
-  console.log('Updating vote:', { productId, clientId, voteType });
   const state = await getVoteState();
   const voteKey = `${productId}:${clientId}`;
   const currentVote = state.votes[voteKey];
-  
-  console.log('Current vote state:', {
-    voteKey,
-    currentVote,
-    currentCounts: state.voteCounts[productId]
-  });
   
   // Initialize vote counts if they don't exist
   if (!state.voteCounts[productId]) {
@@ -187,7 +200,6 @@ export async function updateVote(
       state.voteCounts[productId].downvotes = Math.max(0, state.voteCounts[productId].downvotes - 1);
     }
     delete state.votes[voteKey];
-    console.log('Removed vote - same type as current');
   } else {
     // Remove old vote if it exists
     if (currentVote) {
@@ -197,7 +209,6 @@ export async function updateVote(
         state.voteCounts[productId].downvotes = Math.max(0, state.voteCounts[productId].downvotes - 1);
       }
       delete state.votes[voteKey];
-      console.log('Removed old vote');
     }
     
     // Add new vote
@@ -208,14 +219,18 @@ export async function updateVote(
       } else if (voteType === -1) {
         state.voteCounts[productId].downvotes++;
       }
-      console.log('Added new vote');
+      
+      // Add to userVotes array for tracking
+      if (state.userVotes) {
+        state.userVotes.push({
+          productId,
+          clientId,
+          voteType,
+          timestamp: new Date().toISOString()
+        });
+      }
     }
   }
-  
-  console.log('New vote state:', {
-    votes: state.votes,
-    voteCounts: state.voteCounts[productId]
-  });
   
   // Save the updated state
   await saveVoteState(state);

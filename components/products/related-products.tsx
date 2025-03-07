@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { supabase } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client"
 import { Product } from "@/types/product"
 import { normalizeProduct } from "@/lib/utils"
 import { ProductCard } from "@/components/products/product-card"
@@ -21,6 +21,28 @@ export function RelatedProducts({ product, limit = 4 }: RelatedProductsProps) {
   const { data: relatedProducts, isLoading } = useQuery({
     queryKey: ["related-products", product.category, product.id],
     queryFn: async () => {
+      const supabase = createClient()
+      
+      // Return mock data if supabase client isn't available
+      if (!supabase) {
+        console.log('Using mock related products data')
+        return Array.from({ length: limit }).map((_, index) => ({
+          id: `related-${index + 1}`,
+          name: `Related ${product.category} ${index + 1}`,
+          description: `A related product in the ${product.category} category`,
+          slug: `related-${product.category.toLowerCase()}-${index + 1}`,
+          price: 79.99 + (index * 10),
+          image_url: `/images/products/${product.category.toLowerCase()}-alt${index + 1}.svg`,
+          category: product.category,
+          upvotes: 5 - index,
+          downvotes: index,
+          rank: index + 5,
+          score: 5 - (index * 2),
+          severity: index % 2 === 0 ? 'low' : 'medium',
+          specifications: {}
+        })) as Product[];
+      }
+
       const { data, error } = await supabase
         .from("products")
         .select("*")
@@ -30,7 +52,7 @@ export function RelatedProducts({ product, limit = 4 }: RelatedProductsProps) {
         .limit(limit)
 
       if (error) throw error
-      return data.map(p => normalizeProduct(p)) as Product[]
+      return data.map((p: any) => normalizeProduct(p)) as Product[]
     },
     enabled: !!product.category, // Only run query if we have a category
   })
@@ -57,7 +79,7 @@ export function RelatedProducts({ product, limit = 4 }: RelatedProductsProps) {
         <ProductCard
           key={relatedProduct.id}
           product={relatedProduct}
-          variant="compact"
+          size="sm"
         />
       ))}
     </div>

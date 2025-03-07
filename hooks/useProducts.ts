@@ -1,279 +1,128 @@
 "use client"
 
-import { useCallback, useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
-import type { Database } from '@/types/supabase'
-import { useToast } from '@/components/ui/use-toast'
-import { Product } from '@/types/product'
+import { useState, useEffect } from "react"
+import type { Product } from "@/types/product"
 
-type ProductRanking = Database['public']['Functions']['get_product_rankings']['Returns'][0]
+const isBrowser = typeof window !== 'undefined';
 
-// Helper function to calculate score
-const calculateScore = (product: any) => {
-  const upvotes = typeof product.upvotes === 'number' ? product.upvotes : 0;
-  const downvotes = typeof product.downvotes === 'number' ? product.downvotes : 0;
-  return upvotes - downvotes;
-};
+// Helper function to calculate score from upvotes and downvotes
+const calculateScore = (product: Partial<Product>) => {
+  const upvotes = product.upvotes || 0
+  const downvotes = product.downvotes || 0
+  return upvotes - downvotes
+}
 
 export function useProducts() {
-  const { toast } = useToast()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Error | null>(null)
 
-  const fetchProducts = useCallback(async (category?: string) => {
+  // Define fetchProducts as a function that can be called from the outside
+  const fetchProducts = async (category?: string) => {
     try {
       setLoading(true)
-      console.log('Fetching products with category:', category)
+      setError(null)
       
-      // Try to fetch from API first
-      try {
-        const url = new URL('/api/products', window.location.origin);
-        if (category) {
-          url.searchParams.append('category', category);
-        }
-        
-        // Get client ID from localStorage or generate a new one
-        let clientId = 'anonymous';
-        if (typeof window !== 'undefined') {
-          clientId = localStorage.getItem('tierd_client_id') || 'anonymous';
-        }
-        url.searchParams.append('clientId', clientId);
-        
-        const response = await fetch(url.toString());
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data.products && Array.isArray(data.products)) {
-            console.log('Fetched products from API:', data.products.length);
-            
-            // Ensure all products have the required fields
-            const validatedProducts = data.products.map((product: Partial<Product>) => ({
-              ...product,
-              upvotes: typeof product.upvotes === 'number' ? product.upvotes : 0,
-              downvotes: typeof product.downvotes === 'number' ? product.downvotes : 0,
-              score: product.score !== undefined ? product.score : calculateScore(product),
-              image_url: product.image_url || '/images/products/placeholder.svg'
-            }));
-            
-            // Sort products by score
-            const sortedProducts = [...validatedProducts].sort((a, b) => {
-              // First sort by score (upvotes - downvotes) in descending order
-              const scoreA = a.score !== undefined ? a.score : calculateScore(a);
-              const scoreB = b.score !== undefined ? b.score : calculateScore(b);
-              
-              if (scoreB !== scoreA) {
-                return scoreB - scoreA;
-              }
-              
-              // If scores are equal, sort by total votes (upvotes + downvotes) in descending order
-              const totalVotesA = (a.upvotes || 0) + (a.downvotes || 0);
-              const totalVotesB = (b.upvotes || 0) + (b.downvotes || 0);
-              
-              if (totalVotesB !== totalVotesA) {
-                return totalVotesB - totalVotesA;
-              }
-              
-              // If total votes are equal, sort by name
-              return a.name.localeCompare(b.name);
-            });
-            
-            setProducts(sortedProducts);
-            setError(null);
-            setLoading(false);
-            return;
-          }
-        }
-      } catch (apiError) {
-        console.error('Error fetching products from API:', apiError);
-        // Fall back to Supabase
+      // Create the URL using origin or a default value for server-side
+      const origin = isBrowser ? window.location.origin : 'http://localhost:3000'
+      const url = new URL('/api/products', origin)
+      
+      // Add category filter if provided
+      if (category) {
+        url.searchParams.append('category', category)
       }
       
-      // Fall back to Supabase
-      const { data, error: err } = await supabase.rpc(
-        'get_product_rankings',
-        category ? { p_category: category } : {}
-      )
-
-      if (err) {
-        console.error('Error fetching products:', err)
-        throw err
+      // Add cache-busting parameter
+      url.searchParams.append('t', Date.now().toString())
+      
+      console.log('Fetching products from:', url.toString())
+      
+      const response = await fetch(url.toString(), {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`)
       }
-
-      if (!data) {
-        console.log('No products found')
-        setProducts([])
-        setError(null)
-        return
+      
+      const data = await response.json()
+      
+      // Ensure we have an array
+      if (!Array.isArray(data)) {
+        console.error('API did not return an array:', data)
+        throw new Error('Invalid response format')
       }
-
-      console.log('Fetched products:', data.length)
-      const normalizedProducts = data.map((product: ProductRanking) => ({
-        id: product.id,
-        name: product.name,
-        description: product.description || '',
-        category: product.category,
-        price: product.price || 0,
-        image_url: product.image_url || `/images/products/${product.category.toLowerCase()}.png`,
-        imageUrl: product.image_url || `/images/products/${product.category.toLowerCase()}.png`,
-        url_slug: product.url_slug,
-        specifications: product.specifications || {},
-        created_at: product.created_at,
-        updated_at: product.updated_at,
-        upvotes: product.upvotes || 0,
-        downvotes: product.downvotes || 0,
-        rating: product.rating || 0,
-        review_count: product.review_count || 0,
-        score: product.score || calculateScore(product),
-        rank: product.rank || 0
+      
+      console.log(`Received ${data.length} products from API`)
+      
+      // Calculate score for each product if not already calculated
+      const productsWithScore = data.map((product: any) => ({
+        ...product,
+        // Use existing score if available, otherwise calculate it
+        score: product.score !== undefined ? product.score : calculateScore(product)
       }))
       
-      // Sort products by score
-      const sortedProducts = [...normalizedProducts].sort((a, b) => {
-        // First sort by score (upvotes - downvotes) in descending order
-        if (b.score !== a.score) {
-          return b.score - a.score;
+      // Sort by score (descending)
+      productsWithScore.sort((a: Product, b: Product) => {
+        // First by score
+        const scoreA = a.score || 0
+        const scoreB = b.score || 0
+        
+        if (scoreB !== scoreA) {
+          return scoreB - scoreA
         }
         
-        // If scores are equal, sort by total votes (upvotes + downvotes) in descending order
-        const totalVotesA = a.upvotes + a.downvotes;
-        const totalVotesB = b.upvotes + b.downvotes;
+        // Then by total votes
+        const totalVotesA = (a.upvotes || 0) + (a.downvotes || 0)
+        const totalVotesB = (b.upvotes || 0) + (b.downvotes || 0)
         
         if (totalVotesB !== totalVotesA) {
-          return totalVotesB - totalVotesA;
+          return totalVotesB - totalVotesA
         }
         
-        // If total votes are equal, sort by name
-        return a.name.localeCompare(b.name);
-      });
+        // Finally by name
+        return a.name.localeCompare(b.name)
+      })
       
-      setProducts(sortedProducts)
-      setError(null)
+      setProducts(productsWithScore)
     } catch (err) {
       console.error('Error fetching products:', err)
-      setError(err instanceof Error ? err.message : 'Failed to fetch products')
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch products. Please try again.',
-        variant: 'destructive',
-      })
+      setError(err instanceof Error ? err : new Error('Unknown error fetching products'))
+      
+      // Set empty products array on error
+      setProducts([])
     } finally {
       setLoading(false)
     }
-  }, [toast])
+  }
 
-  const vote = useCallback(async (productId: string, voteType: 'upvote' | 'downvote') => {
-    try {
-      // Get client ID from localStorage
-      let clientId = 'anonymous';
-      if (typeof window !== 'undefined') {
-        clientId = localStorage.getItem('tierd_client_id') || 'anonymous';
-      }
-
-      // Call the vote API endpoint
-      const response = await fetch('/api/vote', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productId,
-          voteType: voteType === 'upvote' ? 1 : -1,
-          clientId
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to vote');
-      }
-
-      // Refresh products to get updated rankings
-      await fetchProducts();
-      
-      toast({
-        title: 'Success',
-        description: 'Your vote has been recorded.',
-      });
-    } catch (err) {
-      console.error('Error voting:', err);
-      toast({
-        title: 'Error',
-        description: err instanceof Error ? err.message : 'Failed to record your vote. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  }, [fetchProducts, toast]);
-
-  const submitReview = useCallback(async (
-    productId: string,
-    review: {
-      rating: number
-      title: string
-      content: string
-      pros?: string[]
-      cons?: string[]
-    }
-  ) => {
-    try {
-      const { error } = await supabase
-        .from('reviews')
-        .insert({
-          product_id: productId,
-          ...review
-        })
-
-      if (error) throw error
-
-      // Refresh products to get updated rankings
-      await fetchProducts()
-      toast({
-        title: 'Success',
-        description: 'Your review has been submitted.',
-      })
-    } catch (err) {
-      console.error('Error submitting review:', err)
-      toast({
-        title: 'Error',
-        description: 'Failed to submit your review. Please try again.',
-        variant: 'destructive',
-      })
-    }
-  }, [fetchProducts, toast])
-
-  const getProductReviews = useCallback(async (productId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('*, user:user_profiles(id, username, avatar_url)')
-        .eq('product_id', productId)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      return data
-    } catch (err) {
-      console.error('Error fetching reviews:', err)
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch reviews. Please try again.',
-        variant: 'destructive',
-      })
-      return []
-    }
-  }, [toast])
-
+  // Call fetchProducts on component mount
   useEffect(() => {
     fetchProducts()
-  }, [fetchProducts])
+  }, [])
+
+  // Function to get products by category
+  const getProductsByCategory = (category: string) => {
+    if (!category) return products
+    return products.filter(product => product.category === category)
+  }
+
+  // Function to get a product by slug
+  const getProductBySlug = (slug: string) => {
+    return products.find(product => 
+      product.slug === slug || product.url_slug === slug
+    ) || null
+  }
 
   return {
     products,
     loading,
     error,
     fetchProducts,
-    vote,
-    submitReview,
-    getProductReviews,
+    getProductsByCategory,
+    getProductBySlug
   }
 } 
