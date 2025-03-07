@@ -1,6 +1,6 @@
 'use server'
 
-import { supabaseServer } from '@/lib/supabase/server'
+import { createApiClient } from '../_utils/api-server-utils'
 import { NextResponse } from 'next/server'
 
 export async function POST(req) {
@@ -15,7 +15,8 @@ export async function POST(req) {
       );
     }
 
-    const { data, error } = await supabaseServer
+    const supabase = createApiClient();
+    const { data, error } = await supabase
       .from('activities')
       .insert([{ user_id: userId, type, product_id: productId, product_name: productName, action }]);
 

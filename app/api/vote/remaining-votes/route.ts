@@ -15,6 +15,9 @@ const VOTES_FILE = path.join(DATA_DIR, 'votes.json');
 const MAX_VOTES_PER_USER = 5;
 const TIME_WINDOW_HOURS = 24; // Consider votes in the last 24 hours
 
+// Max votes per day for anonymous users
+const MAX_VOTES_PER_DAY = 10;
+
 // Vote state type definition
 interface VoteState {
   votes: Record<string, number>;
@@ -136,57 +139,17 @@ export async function hasRemainingVotes(clientId: string, userId?: string): Prom
 
 // API handler to get remaining votes
 export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const clientId = searchParams.get('clientId');
-    const userId = searchParams.get('userId');
-    
-    if (!clientId) {
-      return createErrorResponse("Client ID is required");
-    }
-
-    // If user is authenticated, they have unlimited votes
-    if (userId) {
-      return createSuccessResponse({ 
-        remainingVotes: 999, // Use a high number to represent unlimited
-        message: 'Authenticated users have unlimited votes'
-      });
-    }
-
-    // Otherwise, calculate remaining votes for anonymous users
-    if (!existsSync(VOTES_FILE)) {
-      return createSuccessResponse({ remainingVotes: MAX_VOTES_PER_USER });
-    }
-
-    const data = await fs.readFile(VOTES_FILE, 'utf8');
-    const state = JSON.parse(data);
-
-    // Make sure userVotes exists
-    if (!state.userVotes) {
-      return createSuccessResponse({ remainingVotes: MAX_VOTES_PER_USER });
-    }
-
-    // Get the timestamp for 24 hours ago
-    const cutoffTime = new Date();
-    cutoffTime.setHours(cutoffTime.getHours() - TIME_WINDOW_HOURS);
-
-    // Count recent votes by this client
-    const recentVotes = state.userVotes.filter((vote: any) => {
-      return (
-        vote.clientId === clientId &&
-        new Date(vote.timestamp) > cutoffTime
-      );
-    });
-
-    // Calculate remaining votes
-    const remainingVotes = Math.max(0, MAX_VOTES_PER_USER - recentVotes.length);
-
-    return createSuccessResponse({ remainingVotes });
-  } catch (error) {
-    console.error('Error getting remaining votes:', error);
-    return createErrorResponse(
-      error instanceof Error ? error.message : "Failed to get remaining votes",
-      500
-    );
-  }
+  const { searchParams } = new URL(request.url);
+  const clientId = searchParams.get('clientId') || 'anonymous';
+  
+  // In a real implementation, this would check a database
+  // For our mock, we'll always return the maximum votes
+  
+  return NextResponse.json({
+    success: true,
+    clientId,
+    remainingVotes: MAX_VOTES_PER_DAY,
+    maxVotesPerDay: MAX_VOTES_PER_DAY,
+    votesUsedToday: 0
+  });
 } 

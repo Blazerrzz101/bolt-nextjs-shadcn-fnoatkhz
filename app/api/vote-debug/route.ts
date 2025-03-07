@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase/server';
+import { createApiClient } from '../_utils/api-server-utils';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
   const mode = searchParams.get('mode') || 'all';
   
   try {
+    const supabase = createApiClient();
     const results: any = {
       timestamp: new Date().toISOString(),
       mode
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
     
     // Get product schema
     if (['all', 'schema'].includes(mode)) {
-      const { data: productColumns, error: schemaError } = await supabaseServer
+      const { data: productColumns, error: schemaError } = await supabase
         .rpc('debug_get_columns', { table_name: 'products' });
         
       results.schema = {
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
         error: schemaError
       };
       
-      const { data: voteColumns, error: voteSchemaError } = await supabaseServer
+      const { data: voteColumns, error: voteSchemaError } = await supabase
         .rpc('debug_get_columns', { table_name: 'votes' });
         
       results.schema.votes = voteColumns;
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
     // Sample data
     if (['all', 'data'].includes(mode)) {
       // Get a sample product
-      let productQuery = supabaseServer
+      let productQuery = supabase
         .from('products')
         .select('id, name, upvotes, downvotes, score')
         .limit(1);
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
       
       // Get sample votes for this product
       if (productSample?.[0]?.id) {
-        const { data: votes, error: votesError } = await supabaseServer
+        const { data: votes, error: votesError } = await supabase
           .from('votes')
           .select('*')
           .eq('product_id', productSample[0].id)
@@ -113,7 +114,7 @@ export async function GET(request: NextRequest) {
         };
       } else {
         // Test has_user_voted
-        const { data: hasVoted, error: hasVotedError } = await supabaseServer.rpc(
+        const { data: hasVoted, error: hasVotedError } = await supabase.rpc(
           'has_user_voted',
           { 
             p_product_id: productId,
@@ -122,7 +123,7 @@ export async function GET(request: NextRequest) {
         );
         
         // For testing, let's try both upvote and check
-        const { data: voteResult, error: voteError } = await supabaseServer.rpc(
+        const { data: voteResult, error: voteError } = await supabase.rpc(
           'vote_for_product',
           { 
             p_product_id: productId,
@@ -132,7 +133,7 @@ export async function GET(request: NextRequest) {
         );
         
         // Check vote again
-        const { data: hasVotedAfter, error: hasVotedAfterError } = await supabaseServer.rpc(
+        const { data: hasVotedAfter, error: hasVotedAfterError } = await supabase.rpc(
           'has_user_voted',
           { 
             p_product_id: productId,

@@ -6,10 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { clearAuthData } from "@/lib/auth-utils"
 import { toast } from "sonner"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function AuthStatusDebug() {
   const { user, isAuthenticated, isLoading, refreshAuthState } = useEnhancedAuth()
   const [localStorageData, setLocalStorageData] = useState<{ [key: string]: any }>({})
+  const [serverAuthData, setServerAuthData] = useState<any>(null)
+  const [isLoadingServerData, setIsLoadingServerData] = useState(false)
   
   // Update localStorage data for debugging
   const updateLocalStorageData = () => {
@@ -47,15 +51,36 @@ export function AuthStatusDebug() {
     }
   }
   
+  // Fetch server-side auth status
+  const fetchServerAuthStatus = async () => {
+    setIsLoadingServerData(true)
+    try {
+      const timestamp = new Date().getTime() // Cache-busting
+      const response = await fetch(`/api/auth-status?t=${timestamp}`)
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`)
+      }
+      const data = await response.json()
+      setServerAuthData(data)
+    } catch (error) {
+      console.error("Error fetching server auth status:", error)
+      setServerAuthData({ error: String(error) })
+      toast.error("Failed to fetch server auth status")
+    } finally {
+      setIsLoadingServerData(false)
+    }
+  }
+  
   // Update localStorage data when auth state changes
   useEffect(() => {
     updateLocalStorageData()
+    fetchServerAuthStatus()
   }, [user, isAuthenticated])
   
   // Handler to clear auth data
   const handleClearAuth = () => {
     try {
-      localStorage.removeItem('authUser')
+      clearAuthData()
       updateLocalStorageData()
       toast.success("Auth data cleared")
     } catch (e) {
@@ -93,7 +118,7 @@ export function AuthStatusDebug() {
   const handleResetAndRedirect = () => {
     try {
       // Clear auth data
-      localStorage.removeItem('authUser')
+      clearAuthData()
       
       // Trigger a hard refresh
       const timestamp = new Date().getTime()
@@ -105,45 +130,92 @@ export function AuthStatusDebug() {
     }
   }
   
+  // Handler to refresh server auth data
+  const handleRefreshServerData = () => {
+    fetchServerAuthStatus()
+    toast.success("Refreshing server auth data")
+  }
+  
   return (
     <Card className="w-full max-w-4xl mx-auto mt-8">
-      <CardHeader>
-        <CardTitle>Auth Context State</CardTitle>
-        <CardDescription>
-          Current authentication state from the EnhancedAuth provider
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <pre className="bg-black/80 p-4 rounded-md overflow-auto max-h-[400px]">
-          {JSON.stringify(
-            {
-              isAuthenticated,
-              isLoading,
-              user: user ? {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                isAnonymous: user.isAnonymous,
-                avatar_url: user.avatar_url
-              } : null,
-            },
-            null,
-            2
-          )}
-        </pre>
-      </CardContent>
-
-      <CardHeader>
-        <CardTitle>LocalStorage Data</CardTitle>
-        <CardDescription>
-          Current authentication data stored in localStorage
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <pre className="bg-black/80 p-4 rounded-md overflow-auto max-h-[400px]">
-          {JSON.stringify(localStorageData, null, 2)}
-        </pre>
-      </CardContent>
+      <Tabs defaultValue="client">
+        <TabsList className="mx-6 mt-6">
+          <TabsTrigger value="client">Client Auth</TabsTrigger>
+          <TabsTrigger value="local">LocalStorage</TabsTrigger>
+          <TabsTrigger value="server">Server Auth</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="client">
+          <CardHeader>
+            <CardTitle>Auth Context State</CardTitle>
+            <CardDescription>
+              Current authentication state from the EnhancedAuth provider
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <pre className="bg-black/80 p-4 rounded-md overflow-auto max-h-[400px]">
+              {JSON.stringify(
+                {
+                  isAuthenticated,
+                  isLoading,
+                  user: user ? {
+                    id: user.id,
+                    email: user.email,
+                    name: user.name,
+                    isAnonymous: user.isAnonymous,
+                    avatar_url: user.avatar_url
+                  } : null,
+                },
+                null,
+                2
+              )}
+            </pre>
+          </CardContent>
+        </TabsContent>
+        
+        <TabsContent value="local">
+          <CardHeader>
+            <CardTitle>LocalStorage Data</CardTitle>
+            <CardDescription>
+              Current authentication data stored in localStorage
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <pre className="bg-black/80 p-4 rounded-md overflow-auto max-h-[400px]">
+              {JSON.stringify(localStorageData, null, 2)}
+            </pre>
+          </CardContent>
+        </TabsContent>
+        
+        <TabsContent value="server">
+          <CardHeader>
+            <CardTitle>Server Auth Status</CardTitle>
+            <CardDescription>
+              Authentication status from the server perspective
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoadingServerData ? (
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-4/5" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            ) : (
+              <pre className="bg-black/80 p-4 rounded-md overflow-auto max-h-[400px]">
+                {JSON.stringify(serverAuthData, null, 2)}
+              </pre>
+            )}
+            <div className="mt-4">
+              <Button onClick={handleRefreshServerData} variant="outline" size="sm">
+                Refresh Server Data
+              </Button>
+            </div>
+          </CardContent>
+        </TabsContent>
+      </Tabs>
 
       <CardFooter className="flex flex-wrap gap-2">
         <Button onClick={handleRefreshAuth} variant="outline">

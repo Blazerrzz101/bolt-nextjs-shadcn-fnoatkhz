@@ -1,25 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
+// Mock response for healthcheck
+const mockResponse = {
+  status: 'ok',
+  timestamp: new Date().toISOString(),
+  version: '1.0.0',
+  environment: process.env.NODE_ENV || 'development'
+};
+
+// Simple handler that returns a mock response
 export async function GET(req: NextRequest) {
-  console.log('Healthcheck API called');
-  
-  try {
-    // Basic system information
-    const info = {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
-      version: '1.0.0',
-      apiVersion: 'v1',
-    };
-    
-    return NextResponse.json(info, { status: 200 });
-  } catch (error) {
-    console.error('Error in healthcheck:', error);
-    
-    return NextResponse.json(
-      { status: 'error', message: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+  console.log('Healthcheck API called (mock implementation)');
+  return NextResponse.json(mockResponse);
 } 

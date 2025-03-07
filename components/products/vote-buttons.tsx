@@ -18,6 +18,7 @@ interface VoteButtonsProps {
   initialUpvotes?: number
   initialDownvotes?: number
   initialVoteType?: number | null
+  onVote?: (voteType: 1 | -1) => void
 }
 
 export function VoteButtons({
@@ -25,6 +26,7 @@ export function VoteButtons({
   initialUpvotes = 5,
   initialDownvotes = 2,
   initialVoteType = null,
+  onVote
 }: VoteButtonsProps) {
   const [upvotes, setUpvotes] = useState(initialUpvotes)
   const [downvotes, setDownvotes] = useState(initialDownvotes)
@@ -107,6 +109,13 @@ export function VoteButtons({
     
     // Start vote processing
     setIsVoting(true)
+    
+    // If the component has an onVote callback, use that instead
+    if (onVote) {
+      onVote(newVoteType);
+      setIsVoting(false);
+      return;
+    }
     
     // Check if user has remaining votes (for anonymous users)
     if (!user && (remainingVotes !== null && remainingVotes <= 0)) {

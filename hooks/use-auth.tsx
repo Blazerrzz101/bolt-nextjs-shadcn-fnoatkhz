@@ -26,6 +26,8 @@ const AuthContext = React.createContext<AuthContextType>({
   signInWithProvider: async () => {},
 })
 
+const isBrowser = typeof window !== 'undefined';
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null)
   const [loading, setLoading] = React.useState(true)
@@ -33,36 +35,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast()
 
   React.useEffect(() => {
-    // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    // Listen for changes on auth state (signed in, signed out, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    return () => subscription.unsubscribe()
+    if (isBrowser) {
+      const storedUser = localStorage.getItem('authUser')
+      if (storedUser) {
+        try {
+          const user = JSON.parse(storedUser)
+          setUser(user)
+          setLoading(false)
+        } catch (e) {
+          console.error('Error parsing stored user:', e)
+          localStorage.removeItem('authUser')
+        }
+      }
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      setLoading(true)
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
+      
+      if (error) {
+        setLoading(false)
+        throw error
+      }
 
-      if (error) throw error
-
+      setLoading(false)
+      
       router.push("/")
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in."
       })
     } catch (error) {
+      console.error('Error signing in:', error)
+      setLoading(false)
       toast({
         title: "Error signing in",
         description: error instanceof Error ? error.message : "An error occurred",
@@ -114,17 +125,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?next=/auth/update-password`,
+      setLoading(true)
+      
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: isBrowser ? `${window.location.origin}/auth/reset-password` : '/auth/reset-password',
       })
-
-      if (error) throw error
-
+      
+      if (error) {
+        setLoading(false)
+        throw error
+      }
+      
+      setLoading(false)
       toast({
         title: "Password reset email sent",
         description: "Please check your email for the password reset link."
       })
     } catch (error) {
+      console.error('Error resetting password:', error)
+      setLoading(false)
       toast({
         title: "Error resetting password",
         description: error instanceof Error ? error.message : "An error occurred",

@@ -1,0 +1,53 @@
+{
+  "notifications": [
+    {
+      "id": "notif-1",
+      "userId": "user-1",
+      "type": "vote_milestone",
+      "title": "Vote Milestone",
+      "message": "Your post has received 10 upvotes!",
+      "read": false,
+      "actionUrl": "/products/p5",
+      "createdAt": "2023-03-07T10:15:00.000Z"
+    },
+    {
+      "id": "notif-2",
+      "userId": "user-1",
+      "type": "comment",
+      "title": "New Comment",
+      "message": "User2 commented on your product review",
+      "read": true,
+      "actionUrl": "/products/p1",
+      "createdAt": "2023-03-06T14:30:00.000Z"
+    },
+    {
+      "id": "notif-3",
+      "userId": "user-2",
+      "type": "mention",
+      "title": "Mention",
+      "message": "User3 mentioned you in a comment",
+      "read": false,
+      "actionUrl": "/products/p3",
+      "createdAt": "2023-03-07T09:20:00.000Z"
+    },
+    {
+      "id": "notif-4",
+      "userId": "user-3",
+      "type": "system",
+      "title": "Welcome",
+      "message": "Welcome to Tier'd! Start by exploring product rankings or rating a product.",
+      "read": false,
+      "createdAt": "2023-03-05T18:45:00.000Z"
+    },
+    {
+      "id": "notif-5",
+      "userId": null,
+      "type": "announcement",
+      "title": "New Feature",
+      "message": "We've added product comparison feature. Try it now!",
+      "read": false,
+      "actionUrl": "/features/compare",
+      "createdAt": "2023-03-07T12:00:00.000Z"
+    }
+  ]
+} 

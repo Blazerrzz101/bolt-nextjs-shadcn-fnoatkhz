@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Command } from "cmdk"
 import { Product } from "@/types/product"
-import { supabase } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Tag, X } from "lucide-react"
 
@@ -28,6 +28,67 @@ export function ProductTagger({ onProductsTagged, initialProducts = [] }: Produc
 
       setLoading(true)
       try {
+        const supabase = createClient()
+        
+        // Use mock data if supabase client isn't available
+        if (!supabase) {
+          console.log('Using mock product search data')
+          // Simple client-side search
+          const mockProducts: Product[] = [
+            {
+              id: 'mock1',
+              name: 'Gaming Mouse Pro',
+              description: 'High-performance gaming mouse',
+              slug: 'gaming-mouse-pro',
+              price: 89.99,
+              image_url: '/images/products/mouse-1.svg',
+              category: 'mouse',
+              upvotes: 120,
+              downvotes: 15,
+              rank: 1,
+              score: 105,
+              severity: 'low'
+            },
+            {
+              id: 'mock2',
+              name: 'Mechanical Gaming Keyboard',
+              description: 'Mechanical keyboard with RGB lighting',
+              slug: 'mechanical-gaming-keyboard',
+              price: 129.99,
+              image_url: '/images/products/keyboard-1.svg',
+              category: 'keyboard',
+              upvotes: 95,
+              downvotes: 10,
+              rank: 2,
+              score: 85,
+              severity: 'medium'
+            },
+            {
+              id: 'mock3',
+              name: 'Ultra HD Gaming Monitor',
+              description: '4K monitor with high refresh rate',
+              slug: 'ultra-hd-gaming-monitor',
+              price: 349.99,
+              image_url: '/images/products/monitor-1.svg',
+              category: 'monitor',
+              upvotes: 87,
+              downvotes: 8,
+              rank: 3,
+              score: 79,
+              severity: 'high'
+            }
+          ];
+          
+          // Simple search implementation
+          const filteredProducts = mockProducts.filter(product => 
+            product.name.toLowerCase().includes(search.toLowerCase())
+          );
+          
+          setProducts(filteredProducts);
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase
           .from("products")
           .select("*")

@@ -21,6 +21,8 @@ interface VoteResponse {
   remainingVotes?: number;
 }
 
+const isBrowser = typeof window !== 'undefined';
+
 export function useVote() {
   const [isLoading, setIsLoading] = useState(false)
   const [remainingVotes, setRemainingVotes] = useState<number | null>(null)
@@ -29,7 +31,7 @@ export function useVote() {
 
   // Generate a random client ID if one doesn't exist
   const getClientId = () => {
-    if (typeof window === 'undefined') return 'server-side'
+    if (!isBrowser) return 'server-side'
     
     const storedId = localStorage.getItem('clientId')
     if (storedId) return storedId

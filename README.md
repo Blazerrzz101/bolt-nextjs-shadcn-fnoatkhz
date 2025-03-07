@@ -22,6 +22,13 @@ Tier'd is a modern web application for ranking and reviewing products, featuring
 - **Vote Changing**: Users can change their vote from upvote to downvote and vice versa
 - **Optimistic UI Updates**: Immediate visual feedback with server-side validation
 
+### Dashboard
+- **Product Analytics**: Visual representation of product rankings and vote distribution
+- **Category Distribution**: Pie chart showing the distribution of products across categories
+- **Activity Tracking**: Visualization of user activities by type
+- **Top Product Showcase**: Highlighting the highest-ranked product
+- **Real-time Stats**: Up-to-date statistics on products, votes, and user activities
+
 ### Profile Page
 - **Enhanced Profile UI**: Modern profile page with cover image, profile picture, and activity feed
 - **Real-Time Activity Feed**: Chronological display of user activities with detailed timestamps
@@ -73,6 +80,120 @@ yarn dev
 ```
 
 5. Open your browser and navigate to `http://localhost:3000`
+
+## Development Tools
+
+### Voting System Testing
+
+The application includes several tools to test and manage the voting system:
+
+1. **Test Page**: Visit `/test-vote` in your browser to test the voting interface
+2. **Vote API Test Script**: Run the test script to verify API functionality:
+   ```bash
+   ./scripts/test-vote.sh [product-id]
+   ```
+3. **Vote Count Fixer**: Fix inconsistencies in vote counts:
+   ```bash
+   # Dry run (no changes)
+   npm run fix-votes:dry
+   
+   # Fix vote counts
+   npm run fix-votes
+   ```
+
+### Documentation
+
+Comprehensive documentation is available in several markdown files:
+
+- **API Documentation**: See [API-DOCS.md](./API-DOCS.md) for API endpoint details
+- **Voting System Architecture**: See [VOTING-SYSTEM.md](./VOTING-SYSTEM.md) for details on the voting implementation
+- **Deployment Guide**: See [DEPLOY.md](./DEPLOY.md) for deployment instructions
+
+## Deployment
+
+This application uses Supabase for authentication, database, and storage, which requires server-side rendering (SSR) support for proper functionality.
+
+### Recommended Deployment Method: Vercel
+
+Vercel provides native support for Next.js applications with SSR and API routes, making it ideal for deploying this application.
+
+1. Install the Vercel CLI:
+   ```bash
+   npm install -g vercel
+   ```
+
+2. Login to Vercel:
+   ```bash
+   vercel login
+   ```
+
+3. Deploy to Vercel:
+   ```bash
+   vercel
+   ```
+
+4. Set up environment variables in your Vercel project settings:
+   - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+   - `NEXT_PUBLIC_SITE_URL`: The URL of your deployed site
+   - `DEPLOY_ENV`: Set to `production`
+
+5. For production deployment:
+   ```bash
+   vercel --prod
+   ```
+
+### Using the vercel.json Configuration
+
+This repository includes a `vercel.json` file that configures:
+- Build commands and output directory
+- Security headers for better protection
+- Caching policies for optimal performance
+- Environment variable references
+- Regional deployment settings
+
+The configuration ensures optimal performance and security for your deployed application.
+
+### Handling "self is not defined" Errors
+
+If you encounter `ReferenceError: self is not defined` errors during build or deployment, check:
+
+1. The application uses proper checks for browser-specific APIs:
+   ```javascript
+   const isBrowser = typeof window !== 'undefined';
+   
+   // Use this before accessing browser APIs
+   if (isBrowser) {
+     // Access window, document, localStorage, etc.
+   }
+   ```
+
+2. The `next.config.js` file includes Webpack configuration to handle these cases:
+   ```javascript
+   webpack: (config, { isServer }) => {
+     if (!isServer) {
+       // Client-side specific configuration
+     } else {
+       // Server-side specific configuration
+       config.plugins.push(
+         new webpack.DefinePlugin({
+           'global.self': '{}',
+           'self': isServer ? '{}' : 'self',
+           'window': isServer ? '{}' : 'window',
+         })
+       );
+     }
+     return config;
+   }
+   ```
+
+3. Components that use browser APIs are properly guarded with checks.
+
+### Important Note About Static Exports
+
+Static exports (`next export`) are not compatible with this application due to Supabase's dependency on browser APIs. When attempting static exports, you may encounter `ReferenceError: self is not defined` errors during the build process.
+
+For more advanced deployment options or troubleshooting, see our [DEPLOY.md](./DEPLOY.md) guide.
 
 ## Technical Details
 
@@ -144,6 +265,22 @@ The application includes a standardized voting system that allows users to upvot
 - Score calculation (upvotes minus downvotes)
 - Product ranking based on vote score
 
+### Mock Implementation
+
+For development and testing purposes, the application includes a mock implementation of the voting system that doesn't require a database connection. The mock implementation:
+
+- Uses in-memory storage for votes and vote counts
+- Simulates all voting functionality including toggling and changing votes
+- Provides realistic vote counts and scores for testing
+- Includes test products (p1-p5) for easy testing
+
+To test the voting system, visit the `/test-vote` page in the application. This page allows you to:
+
+- View the current vote status for test products
+- Cast upvotes and downvotes
+- See the effects of vote toggling and changing
+- Check remaining votes for anonymous users
+
 ### Vote Storage
 
 Votes are stored in a JSON file at `data/votes.json` with the following structure:
@@ -159,32 +296,33 @@ Votes are stored in a JSON file at `data/votes.json` with the following structur
       "downvotes": number
     }
   },
-  "lastUpdated": "ISO date string"
+  "lastUpdated": "ISO date string",
+  "userVotes": [
+    {
+      "productId": "product-id",
+      "clientId": "client-id",
+      "voteType": 1|-1,
+      "timestamp": "ISO date string"
+    }
+  ]
 }
 ```
 
 ### Voting API
 
-The voting API is accessible via the standardized product endpoint:
+The voting API is documented in detail in the [API-DOCS.md](./API-DOCS.md) file. Key endpoints:
 
-- `POST /api/products/product` - to submit a vote with body:
-  ```json
-  {
-    "productId": "product-id",
-    "voteType": 1 or -1,
-    "clientId": "unique-client-id"
-  }
-  ```
-
-- `GET /api/products/product?id={productId}&clientId={clientId}` - to fetch product details with vote status
+- `GET /api/vote?productId={productId}&clientId={clientId}` - get vote status
+- `POST /api/vote` - submit a vote
+- `GET /api/vote/remaining-votes?clientId={clientId}` - check remaining votes
 
 ### Testing the Voting System
 
-The repository includes a PowerShell script `test-vote.ps1` that tests the voting functionality:
+The repository includes a shell script `scripts/test-vote.sh` that tests the voting functionality:
 
 ```bash
 # Run the test script
-powershell -ExecutionPolicy Bypass -File test-vote.ps1
+./scripts/test-vote.sh [product-id]
 ```
 
 The script tests:
@@ -197,22 +335,171 @@ The script tests:
 
 ### Fixing Vote Count Inconsistencies
 
-If vote counts become inconsistent (which can happen if the server is interrupted during a vote update), you can use the `fix-votes.js` script to recalculate and fix the counts:
+If vote counts become inconsistent (which can happen if the server is interrupted during a vote update), you can use the fix-votes script:
 
 ```bash
-# Check what would be fixed without making changes
-node fix-votes.js --dry-run
+# Check for inconsistencies without making changes
+npm run fix-votes:dry
 
-# Fix the vote counts
-node fix-votes.js
+# Fix inconsistencies
+npm run fix-votes
 ```
 
-The script recalculates vote counts based on the actual votes in the `votes` object and updates the `voteCounts` object accordingly.
+The script:
+1. Analyzes all votes in the system
+2. Counts actual votes for each product
+3. Compares with stored vote counts
+4. Updates counts to match actual votes
+5. Reports on all changes made
 
-## Acknowledgments
+### Rate Limiting
 
-- [Next.js](https://nextjs.org/)
-- [Supabase](https://supabase.io/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [shadcn/ui](https://ui.shadcn.com/)
-- [Vercel](https://vercel.com/)
+Anonymous users are limited to a configurable number of votes per day (default: 10). This is managed through:
+
+1. The `userVotes` array in the vote state, which tracks all votes with timestamps
+2. The `/api/vote/remaining-votes` endpoint that calculates votes used in the current 24-hour period
+3. The `VoteButtons` component, which displays remaining votes and blocks voting when the limit is reached
+
+### Further Documentation
+
+For a complete architectural overview of the voting system, see [VOTING-SYSTEM.md](./VOTING-SYSTEM.md).
+
+## Recent Improvements and Fixes
+
+### System Stability Enhancements
+
+We've made several improvements to ensure the application runs reliably in both development and production environments:
+
+1. **Fixed Static Asset Loading**: Resolved 404 errors for CSS and JavaScript files by properly configuring the Next.js build process with MiniCssExtractPlugin.
+
+2. **Improved Error Handling**: Added comprehensive error handling throughout the application, particularly in API routes and React components.
+
+3. **Data Integrity Checks**: Added automatic checks and repairs for data files to prevent corruption and ensure consistent state.
+
+4. **Pre-build Validation**: Implemented a pre-build check script that verifies all necessary files and dependencies exist before building.
+
+5. **Production-Ready Startup**: Created a production startup script that ensures all required data is available and valid before starting the server.
+
+### Monitoring and Testing
+
+1. **Health Check System**: Added a comprehensive health check system that tests all critical API endpoints and features.
+
+2. **Vote System Testing**: Enhanced the vote testing script to verify all voting scenarios, including upvoting, downvoting, and vote toggling.
+
+3. **Data Consistency Tools**: Improved the vote count fixer script to detect and repair inconsistencies in vote data.
+
+### Development Tools
+
+1. **Improved Scripts**: Added several npm scripts to streamline development and testing:
+   - `npm run health-check`: Run a comprehensive health check
+   - `npm run health-check:production`: Run health check against production
+   - `npm run pre-build-check`: Verify all requirements before building
+   - `npm run start:production`: Start the server with production checks
+
+2. **Enhanced Documentation**: Updated documentation to reflect the latest changes and provide clear instructions for development and deployment.
+
+### Voting System Improvements
+
+1. **Optimized Vote Toggling**: Enhanced the vote toggling logic to properly handle all edge cases.
+
+2. **Improved Client ID Management**: Better handling of client IDs for anonymous users.
+
+3. **Enhanced Rate Limiting**: More reliable rate limiting for anonymous users.
+
+4. **Vote Status Caching**: Improved caching of vote status to reduce API calls.
+
+## Advanced Monitoring and Automation
+
+The application now includes robust tools for monitoring system health, generating realistic user traffic, stress testing, and automating activities:
+
+### System Monitor
+
+The system monitor continuously checks all components of the application to ensure everything is working properly.
+
+```bash
+# Run the system monitor
+npm run monitor
+
+# Run with faster update interval (5 seconds)
+npm run monitor:fast
+```
+
+Features:
+- Real-time endpoint status checks
+- Data file integrity verification
+- Automated vote functionality testing
+- Comprehensive error reporting
+
+### Stress Testing
+
+The stress testing tool simulates multiple users voting simultaneously to test system performance and stability.
+
+```bash
+# Run standard stress test (50 users, 10 votes each)
+npm run stress-test
+
+# Run light stress test (10 users, 5 votes each)
+npm run stress-test:light
+
+# Run heavy stress test (100 users, 20 votes each, 20 concurrent requests)
+npm run stress-test:heavy
+```
+
+Features:
+- Configurable user count and vote volume
+- Concurrent request handling
+- Detailed performance metrics
+- Error pattern analysis
+
+### Activity Bot
+
+The activity bot simulates real user behavior by continuously performing various actions like browsing products, voting, checking notifications, etc.
+
+```bash
+# Run standard activity bot (5 bots)
+npm run bot
+
+# Run light activity bot (2 bots, slower activity)
+npm run bot:light
+
+# Run heavy activity bot (10 bots, rapid activity)
+npm run bot:heavy
+
+# Run time-limited bot (5 bots, runs for 5 minutes)
+npm run bot:timed
+```
+
+Features:
+- Realistic user behavior simulation
+- Weighted activity distribution
+- Detailed activity tracking
+- Configurable bot count and timing
+
+### All-In-One Startup
+
+For the ultimate development experience, the all-in-one startup script launches the application, system monitor, and activity bot in separate terminals.
+
+```bash
+# Start everything
+npm run start:all
+```
+
+Features:
+- One-command setup
+- Automatic server verification
+- Browser auto-launch
+- Detailed status reporting
+
+### Usage Recommendations
+
+Different combinations of these tools are useful for different scenarios:
+
+1. **Development**: Use `npm run dev` for normal development or `npm run start:all` for a comprehensive development environment.
+
+2. **Testing**: Use `npm run bot:light` to generate background traffic and `npm run health-check` to verify functionality.
+
+3. **Stress Testing**: Use `npm run stress-test:light` to check for errors under light load or `npm run stress-test:heavy` for performance testing.
+
+4. **Production Preparation**: Run `npm run pre-build-check` to verify everything is ready for production.
+
+5. **Production**: Use `npm run start:production` for the most reliable production startup.

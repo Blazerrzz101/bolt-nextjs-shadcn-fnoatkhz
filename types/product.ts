@@ -2,31 +2,29 @@
 
 export type Json = string | number | boolean | null | { [key: string]: Json } | Json[]
 
-export interface Product {
+export type Product = {
   id: string;
   name: string;
   description: string;
-  category: string;
+  slug?: string;
+  url_slug?: string;
   price: number;
   image_url: string;
-  imageUrl: string;
-  url_slug: string;
-  specifications: Record<string, any>;
-  created_at: string;
-  updated_at: string;
+  category: string;
   upvotes: number;
   downvotes: number;
-  score: number;
-  rank: number;
-  userVote?: {
-    hasVoted: boolean;
-    voteType: VoteType;
-  };
-  rating: number;
-  review_count: number;
-  reviews: Review[];
-  threads: Thread[];
-}
+  rank?: number;
+  score?: number;
+  severity?: string;
+  specifications?: Record<string, any>;
+  rating?: number;
+  review_count?: number;
+  reviews?: any[];
+  threads?: any[];
+  userVote?: number | null;
+  created_at?: string;
+  updated_at?: string;
+};
 
 export interface Review {
   id: string;

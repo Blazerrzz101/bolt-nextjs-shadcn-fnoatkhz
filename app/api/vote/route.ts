@@ -4,13 +4,19 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs/promises';
 import path from 'path';
 import { existsSync } from 'fs';
+import { 
+  getProductById, 
+  getVoteCounts, 
+  setVoteCounts,
+  addActivity
+} from '@/lib/mock-data';
 
 // Ensure Vote API is dynamic
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 // Mock products import to maintain consistency
-import { mockProducts } from '../products/route';
+import { mockProducts, testProducts } from '@/lib/mock-data';
 
 // Define interfaces for clarity
 interface VoteCounts {
@@ -35,6 +41,24 @@ interface VoteState {
 // Path constants
 const DATA_DIR = path.resolve(process.cwd(), 'data');
 const VOTES_FILE = path.resolve(DATA_DIR, 'votes.json');
+
+// In-memory storage for votes in this session
+const voteStore = {
+  votes: {},
+  voteCounts: {
+    'p1': { upvotes: 5, downvotes: 2 },
+    'p2': { upvotes: 10, downvotes: 3 },
+    'p3': { upvotes: 7, downvotes: 1 },
+    'p4': { upvotes: 8, downvotes: 4 },
+    'p5': { upvotes: 12, downvotes: 2 }
+  }
+};
+
+// Mock user votes storage as Record<string, number>
+const mockUserVotes: Record<string, number> = {};
+
+// Max votes per day for anonymous users
+const MAX_VOTES_PER_DAY = parseInt(process.env.NEXT_PUBLIC_MAX_VOTES_PER_DAY || '10', 10);
 
 // Prepare consistent error and success response formats
 const createErrorResponse = (message: string, status: number = 400) => {
@@ -93,6 +117,14 @@ async function initializeVoteState(): Promise<VoteState> {
         initialState.voteCounts[product.id] = {
           upvotes: Math.floor(Math.random() * 10),
           downvotes: Math.floor(Math.random() * 5),
+        };
+      });
+
+      // Initialize vote counts for test products
+      Object.values(testProducts).forEach(product => {
+        initialState.voteCounts[product.id] = {
+          upvotes: product.upvotes || 0,
+          downvotes: product.downvotes || 0,
         };
       });
 
@@ -177,163 +209,140 @@ function recordVote(state: VoteState, productId: string, clientId: string, voteT
 // Get vote status for a product
 export async function GET(request: NextRequest) {
   try {
+    console.log("GET /api/vote called");
     const { searchParams } = new URL(request.url);
-    const productId = searchParams.get('productId');
-    const clientId = searchParams.get('clientId');
-    
-    // Validate parameters
+    const productId = searchParams.get("productId");
+    const clientId = searchParams.get("clientId") || 'anonymous';
+
     if (!productId) {
-      return createErrorResponse('Product ID is required');
+      return NextResponse.json({ 
+        success: false, 
+        error: "Product ID is required" 
+      }, { status: 400 });
     }
 
-    if (!clientId) {
-      return createErrorResponse('Client ID is required');
-    }
+    // Get vote counts
+    const voteCounts = voteStore.voteCounts[productId] || { upvotes: 0, downvotes: 0 };
+    const voteKey = `${productId}:${clientId}`;
+    const voteType = mockUserVotes[voteKey] || null;
+    const hasVoted = voteType !== null;
+    const score = (voteCounts.upvotes || 0) - (voteCounts.downvotes || 0);
 
-    // Get current vote state
-    const state = await getVoteState();
-
-    // Get vote counts for this product
-    const voteCounts = state.voteCounts[productId] || { upvotes: 0, downvotes: 0 };
-    
-    // Get user's vote (if any)
-    const voteKey = `${clientId}:${productId}`;
-    const voteType = state.votes[voteKey] || null;
-    
-    // Calculate score
-    const score = calculateScore(voteCounts.upvotes, voteCounts.downvotes);
-
-    return createSuccessResponse({
-      productId,
+    console.log(`Vote status for ${productId} by ${clientId}:`, {
       voteType,
+      hasVoted,
       upvotes: voteCounts.upvotes,
       downvotes: voteCounts.downvotes,
-      score,
-      hasVoted: voteType !== null,
+      score
+    });
+
+    return NextResponse.json({
+      success: true,
+      productId,
+      voteType,
+      hasVoted,
+      upvotes: voteCounts.upvotes,
+      downvotes: voteCounts.downvotes,
+      score
     });
   } catch (error) {
-    console.error('Error getting vote status:', error);
-    return createErrorResponse(
-      error instanceof Error ? error.message : 'Failed to get vote status',
-      500
-    );
+    console.error("Error in GET /api/vote:", error);
+    return NextResponse.json({ 
+      success: false, 
+      error: "Internal server error" 
+    }, { status: 500 });
   }
 }
 
-// Handle vote submission
+// Process a vote
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { productId, clientId, voteType } = body;
-    const userId = body.userId || null; // Get userId if provided
+    const { productId, voteType, clientId = 'anonymous' } = body;
+    
+    console.log(`Processing vote: product=${productId}, client=${clientId}, voteType=${voteType}, currentVote=${mockUserVotes[`${productId}:${clientId}`]}`);
 
-    // Validate input parameters
+    // Validate request
     if (!productId) {
-      return createErrorResponse('Product ID is required');
+      return NextResponse.json({ 
+        success: false, 
+        error: "Product ID is required" 
+      }, { status: 400 });
+    }
+
+    if (voteType !== 1 && voteType !== -1 && voteType !== 0) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Vote type must be 1 (upvote), -1 (downvote), or 0 (clear vote)" 
+      }, { status: 400 });
+    }
+
+    // Check vote counts
+    if (!voteStore.voteCounts[productId]) {
+      voteStore.voteCounts[productId] = { upvotes: 0, downvotes: 0 };
     }
     
-    if (!clientId) {
-      return createErrorResponse('Client ID is required');
-    }
+    // Get current vote counts
+    const currentCounts = voteStore.voteCounts[productId];
     
-    if (voteType !== 1 && voteType !== -1) {
-      return createErrorResponse('Invalid vote type (must be 1 or -1)');
-    }
+    // Check the user's current vote
+    const voteKey = `${productId}:${clientId}`;
+    const currentVote = mockUserVotes[voteKey] || null;
 
-    // Get current vote state
-    const state = await getVoteState();
-
-    // Check rate limiting for anonymous users (skip for authenticated users)
-    const { hasRemainingVotes } = await import('./remaining-votes/route');
-    if (!(await hasRemainingVotes(clientId, userId))) {
-      return createErrorResponse(
-        'You have reached your maximum votes (5 total). Please sign in to vote more.',
-        429 // Too Many Requests
-      );
-    }
-
-    // Initialize vote counts for this product if needed
-    if (!state.voteCounts[productId]) {
-      state.voteCounts[productId] = { upvotes: 0, downvotes: 0 };
-    }
-
-    // Get the vote key for this client and product
-    const voteKey = `${clientId}:${productId}`;
-    const currentVote = state.votes[voteKey];
-    
-    console.log(`Processing vote: product=${productId}, client=${clientId}, voteType=${voteType}, currentVote=${currentVote}`);
-
-    // Remove existing vote if present
-    if (currentVote) {
+    // Handle vote logic
+    if ((voteType === 0) || (currentVote === voteType)) {
+      // Clearing vote or toggle (voting the same way twice)
       if (currentVote === 1) {
-        state.voteCounts[productId].upvotes = Math.max(0, state.voteCounts[productId].upvotes - 1);
+        currentCounts.upvotes = Math.max(0, currentCounts.upvotes - 1);
       } else if (currentVote === -1) {
-        state.voteCounts[productId].downvotes = Math.max(0, state.voteCounts[productId].downvotes - 1);
+        currentCounts.downvotes = Math.max(0, currentCounts.downvotes - 1);
       }
-    }
-
-    // Handle vote toggling (voting the same way twice)
-    if (currentVote === voteType) {
+      
       // Remove the vote
-      delete state.votes[voteKey];
+      delete mockUserVotes[voteKey];
       console.log(`Vote removed for ${productId} by ${clientId}`);
+    } else {
+      // Changing vote or adding new vote
       
-      // Record the vote action for rate limiting
-      recordVote(state, productId, clientId, 0); // 0 indicates vote removal
+      // Remove old vote first if exists
+      if (currentVote === 1) {
+        currentCounts.upvotes = Math.max(0, currentCounts.upvotes - 1);
+      } else if (currentVote === -1) {
+        currentCounts.downvotes = Math.max(0, currentCounts.downvotes - 1);
+      }
       
-      // Save updated state
-      await saveVoteState(state);
+      // Add new vote
+      if (voteType === 1) {
+        currentCounts.upvotes += 1;
+        console.log(`Upvote recorded: ${voteType} for ${productId} by ${clientId}`);
+      } else if (voteType === -1) {
+        currentCounts.downvotes += 1;
+        console.log(`Downvote recorded: ${voteType} for ${productId} by ${clientId}`);
+      }
       
-      const updatedCounts = state.voteCounts[productId];
-      const score = calculateScore(updatedCounts.upvotes, updatedCounts.downvotes);
-      
-      return createSuccessResponse({
-        message: 'Vote removed',
-        productId,
-        voteType: null,
-        upvotes: updatedCounts.upvotes,
-        downvotes: updatedCounts.downvotes,
-        score,
-        hasVoted: false
-      });
+      // Store the new vote
+      mockUserVotes[voteKey] = voteType;
     }
-
-    // Add new vote
-    state.votes[voteKey] = voteType;
     
-    // Update vote counts
-    if (voteType === 1) {
-      state.voteCounts[productId].upvotes++;
-    } else if (voteType === -1) {
-      state.voteCounts[productId].downvotes++;
-    }
-
-    // Record the vote action for rate limiting
-    recordVote(state, productId, clientId, voteType);
+    // Calculate score
+    const score = currentCounts.upvotes - currentCounts.downvotes;
     
-    // Save updated state
-    await saveVoteState(state);
-
-    const updatedCounts = state.voteCounts[productId];
-    const score = calculateScore(updatedCounts.upvotes, updatedCounts.downvotes);
+    console.log(`New counts: upvotes=${currentCounts.upvotes}, downvotes=${currentCounts.downvotes}, score=${score}`);
     
-    console.log(`Vote recorded: ${voteType} for ${productId} by ${clientId}`);
-    console.log(`New counts: upvotes=${updatedCounts.upvotes}, downvotes=${updatedCounts.downvotes}, score=${score}`);
-
-    return createSuccessResponse({
-      message: voteType === 1 ? 'Upvoted' : 'Downvoted',
+    return NextResponse.json({
+      success: true,
       productId,
-      voteType,
-      upvotes: updatedCounts.upvotes,
-      downvotes: updatedCounts.downvotes,
+      upvotes: currentCounts.upvotes,
+      downvotes: currentCounts.downvotes,
+      voteType: mockUserVotes[voteKey] || null,
       score,
-      hasVoted: true
+      remainingVotes: MAX_VOTES_PER_DAY
     });
   } catch (error) {
-    console.error('Error processing vote:', error);
-    return createErrorResponse(
-      error instanceof Error ? error.message : 'Failed to process vote',
-      500
-    );
+    console.error("Error in POST /api/vote:", error);
+    return NextResponse.json({ 
+      success: false, 
+      error: "Failed to process vote" 
+    }, { status: 500 });
   }
 } 

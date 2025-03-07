@@ -1,7 +1,7 @@
 "use client"
 
-import { Product } from "@/types/product"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { Product } from "@/types"
+import { createClient } from "@/lib/supabase/client"
 import { Database } from "@/lib/supabase/database.types"
 import { useQuery } from "@tanstack/react-query"
 import { ProductDetailLayout } from "@/components/products/product-detail-layout"
@@ -58,9 +58,36 @@ interface Thread {
 }
 
 export async function fetchProduct(slug: string): Promise<Product | null> {
-  const supabase = createClientComponentClient<Database>()
   try {
     console.log('Fetching product with slug:', slug)
+    
+    // Try to create Supabase client
+    let supabase;
+    try {
+      supabase = createClient();
+    } catch (err) {
+      console.warn('Unable to create Supabase client, using mock data:', err);
+      
+      // Return mock data when in offline mode
+      const product = localProducts.find(p => p.url_slug === slug || generateSlug(p.name) === slug);
+      if (!product) return null;
+      
+      // Convert mock product to match Product type
+      return {
+        id: product.id,
+        name: product.name,
+        description: product.description || '',
+        price: product.price || 0,
+        imageUrl: product.image_url || productImages[product.category.toLowerCase() as keyof typeof productImages] || '/images/fallback.png',
+        category: product.category,
+        upvotes: 0,
+        downvotes: 0,
+        rank: 0,
+        userVote: null,
+        specs: product.specifications || {},
+        url_slug: product.url_slug
+      };
+    }
     
     // Get the basic product data
     const { data: productData, error: productError } = await supabase
@@ -101,7 +128,7 @@ export async function fetchProduct(slug: string): Promise<Product | null> {
     // If we have thread products, get the actual threads
     let threadsData: Thread[] = []
     if (threadProductsData && threadProductsData.length > 0) {
-      const threadIds = threadProductsData.map(tp => tp.thread_id)
+      const threadIds = threadProductsData.map((tp: { thread_id: string }) => tp.thread_id)
       const { data: threads } = await supabase
         .from('threads')
         .select('*')
@@ -116,40 +143,13 @@ export async function fetchProduct(slug: string): Promise<Product | null> {
       description: productData.description || '',
       category: productData.category,
       price: productData.price || 0,
-      url_slug: productData.url_slug,
-      image_url: productData.image_url || `/images/products/${productData.category.toLowerCase()}.png`,
-      specifications: productData.specifications as Record<string, any> | null,
-      created_at: productData.created_at,
-      updated_at: productData.updated_at,
+      imageUrl: productData.image_url || `/images/products/${productData.category.toLowerCase()}.png`,
+      specs: productData.specifications as Record<string, string> || {},
       upvotes: rankingsData?.upvotes || 0,
       downvotes: rankingsData?.downvotes || 0,
-      rating: rankingsData?.rating || 0,
-      review_count: rankingsData?.review_count || 0,
-      reviews: (reviewsData || []).map(review => ({
-        id: review.id,
-        content: review.content || '',
-        rating: review.rating || 0,
-        title: review.title || '',
-        created_at: review.created_at,
-        user: {
-          id: review.user_id || 'anonymous',
-          email: '',
-          display_name: 'Anonymous',
-          avatar_url: null
-        }
-      })),
-      threads: (threadsData || []).map(thread => ({
-        id: thread.id,
-        title: thread.title || '',
-        content: thread.content || '',
-        created_at: thread.created_at,
-        user: {
-          id: thread.user_id || 'anonymous',
-          email: '',
-          display_name: 'Anonymous',
-          avatar_url: null
-        }
-      }))
+      rank: 0,
+      userVote: null,
+      url_slug: productData.url_slug
     }
 
     console.log('Successfully fetched product:', product.name)
@@ -161,8 +161,6 @@ export async function fetchProduct(slug: string): Promise<Product | null> {
 }
 
 function useProduct(url_slug: string) {
-  const supabase = createClientComponentClient<Database>()
-
   return useQuery({
     queryKey: ['product', url_slug],
     queryFn: () => fetchProduct(url_slug),

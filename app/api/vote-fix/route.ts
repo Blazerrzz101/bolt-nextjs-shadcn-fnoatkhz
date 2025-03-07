@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase/server';
+import { withStaticBuildHandler, getServerClient, createSuccessResponse, createErrorResponse } from '@/lib/api-wrapper';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 // API endpoint to fix vote counts in the database
-export async function POST(request: NextRequest) {
+export const POST = withStaticBuildHandler(async (request: NextRequest) => {
   try {
     // Get authentication header (optional, could require a specific token)
     const authHeader = request.headers.get('authorization');
@@ -13,303 +13,206 @@ export async function POST(request: NextRequest) {
     // In production, you'd want to check for a valid token
     // This is a simplified example that could be enhanced with proper auth
     
-    const { productId } = await request.json();
+    const { productId, dryRun = false } = await request.json();
+    const supabase = getServerClient();
+    
+    // If we're in a static build or have no Supabase client
+    if (!supabase) {
+      return createSuccessResponse({
+        message: 'Vote fix operation would run here (mock)',
+        fixedProducts: [],
+        dryRun: true,
+        isMock: true
+      });
+    }
+    
+    // Results will store information about fixed products
+    const results = {
+      fixedProducts: [],
+      errors: [],
+      summary: {
+        productsChecked: 0,
+        productsFixed: 0,
+        totalUpvotesAdded: 0,
+        totalDownvotesAdded: 0,
+        totalUpvotesRemoved: 0,
+        totalDownvotesRemoved: 0,
+      }
+    };
     
     // If a specific product ID is provided, only fix that one
     if (productId) {
-      // First, get the current vote counts directly from the votes table
-      const { data: votes, error: votesError } = await supabaseServer
-        .from('votes')
-        .select('vote_type')
-        .eq('product_id', productId);
+      console.log(`Fixing votes for specific product: ${productId} (dry run: ${dryRun})`);
+      const productResult = await fixProductVotes(supabase, productId, dryRun);
+      results.productsChecked = 1;
       
-      if (votesError) {
-        return NextResponse.json({ 
-          error: 'Error fetching votes',
-          details: votesError 
-        }, { status: 500 });
+      if (productResult.fixed) {
+        results.fixedProducts.push(productResult);
+        results.summary.productsFixed++;
+        results.summary.totalUpvotesAdded += productResult.upvotesAdded || 0;
+        results.summary.totalDownvotesAdded += productResult.downvotesAdded || 0;
+        results.summary.totalUpvotesRemoved += productResult.upvotesRemoved || 0;
+        results.summary.totalDownvotesRemoved += productResult.downvotesRemoved || 0;
       }
-      
-      // Count the votes manually
-      const upvotes = votes?.filter(v => v.vote_type === 1).length || 0;
-      const downvotes = votes?.filter(v => v.vote_type === -1).length || 0;
-      const score = upvotes - downvotes;
-      
-      // Update the product with the correct counts
-      const { data: updateResult, error: updateError } = await supabaseServer
+    } else {
+      // Get all products
+      const { data: products, error: productsError } = await supabase
         .from('products')
-        .update({
-          upvotes: upvotes,
-          downvotes: downvotes,
-          score: score,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', productId)
-        .select();
+        .select('id, name, upvotes, downvotes');
       
-      if (updateError) {
-        return NextResponse.json({ 
-          error: 'Error updating product',
-          details: updateError 
-        }, { status: 500 });
+      if (productsError) {
+        return createErrorResponse('Error fetching products', productsError);
       }
       
-      return NextResponse.json({
-        success: true,
-        message: `Fixed vote counts for product ${productId}`,
-        before: {
-          upvotes: updateResult?.[0]?.upvotes || 0,
-          downvotes: updateResult?.[0]?.downvotes || 0,
-          score: updateResult?.[0]?.score || 0
-        },
-        after: {
-          upvotes,
-          downvotes,
-          score
+      console.log(`Fixing votes for ${products.length} products (dry run: ${dryRun})`);
+      results.summary.productsChecked = products.length;
+      
+      // Process each product
+      for (const product of products) {
+        const productResult = await fixProductVotes(supabase, product.id, dryRun);
+        
+        if (productResult.fixed) {
+          results.fixedProducts.push(productResult);
+          results.summary.productsFixed++;
+          results.summary.totalUpvotesAdded += productResult.upvotesAdded || 0;
+          results.summary.totalDownvotesAdded += productResult.downvotesAdded || 0;
+          results.summary.totalUpvotesRemoved += productResult.upvotesRemoved || 0;
+          results.summary.totalDownvotesRemoved += productResult.downvotesRemoved || 0;
         }
-      });
-    } 
-    
-    // If no product ID is provided, fix all products
-    // Get all products
-    const { data: products, error: productsError } = await supabaseServer
-      .from('products')
-      .select('id');
-    
-    if (productsError) {
-      return NextResponse.json({ 
-        error: 'Error fetching products',
-        details: productsError 
-      }, { status: 500 });
-    }
-    
-    const results: any[] = [];
-    
-    // Process each product
-    for (const product of products || []) {
-      try {
-        // Get votes for this product
-        const { data: votes, error: votesError } = await supabaseServer
-          .from('votes')
-          .select('vote_type')
-          .eq('product_id', product.id);
-        
-        if (votesError) {
-          results.push({
-            id: product.id,
-            error: votesError
-          });
-          continue;
-        }
-        
-        // Count the votes
-        const upvotes = votes?.filter(v => v.vote_type === 1).length || 0;
-        const downvotes = votes?.filter(v => v.vote_type === -1).length || 0;
-        const score = upvotes - downvotes;
-        
-        // Get current product values
-        const { data: currentProduct, error: currentError } = await supabaseServer
-          .from('products')
-          .select('upvotes, downvotes, score')
-          .eq('id', product.id)
-          .single();
-        
-        if (currentError) {
-          results.push({
-            id: product.id,
-            error: currentError
-          });
-          continue;
-        }
-        
-        // Update the product
-        const { error: updateError } = await supabaseServer
-          .from('products')
-          .update({
-            upvotes: upvotes,
-            downvotes: downvotes,
-            score: score,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', product.id);
-        
-        if (updateError) {
-          results.push({
-            id: product.id,
-            error: updateError
-          });
-          continue;
-        }
-        
-        results.push({
-          id: product.id,
-          success: true,
-          before: {
-            upvotes: Number(currentProduct?.upvotes) || 0,
-            downvotes: Number(currentProduct?.downvotes) || 0,
-            score: Number(currentProduct?.score) || 0
-          },
-          after: {
-            upvotes,
-            downvotes,
-            score
-          },
-          changed: upvotes !== Number(currentProduct?.upvotes) || 
-                   downvotes !== Number(currentProduct?.downvotes) ||
-                   score !== Number(currentProduct?.score)
-        });
-      } catch (error) {
-        results.push({
-          id: product.id,
-          error: error instanceof Error ? error.message : String(error)
-        });
       }
     }
     
-    return NextResponse.json({
-      success: true,
-      message: `Processed ${results.length} products`,
-      successCount: results.filter(r => r.success).length,
-      changedCount: results.filter(r => r.changed).length,
-      errorCount: results.filter(r => r.error).length,
-      results
+    // Return results
+    return createSuccessResponse({
+      message: dryRun ? 'Dry run completed successfully' : 'Vote counts fixed successfully',
+      dryRun,
+      summary: results.summary,
+      fixedProducts: results.fixedProducts
     });
   } catch (error) {
-    console.error('Fix votes API error:', error);
-    return NextResponse.json({ 
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : String(error)
-    }, { status: 500 });
+    console.error('Error in vote-fix API:', error);
+    return createErrorResponse('Error fixing vote counts', error);
   }
-}
+});
 
-// GET endpoint to get vote fixing status (to avoid multiple POSTs)
-export async function GET(request: NextRequest) {
+// Helper function to fix vote counts for a specific product
+async function fixProductVotes(supabase, productId, dryRun = false) {
   try {
-    const { searchParams } = new URL(request.url);
-    const productId = searchParams.get('productId');
+    // First, get the current vote counts directly from the votes table
+    const { data: votes, error: votesError } = await supabase
+      .from('votes')
+      .select('vote_type')
+      .eq('product_id', productId);
     
-    if (productId) {
-      // Get a specific product's vote counts
-      const { data: product, error: productError } = await supabaseServer
-        .from('products')
-        .select('id, name, upvotes, downvotes, score')
-        .eq('id', productId)
-        .single();
-      
-      if (productError) {
-        return NextResponse.json({ 
-          error: 'Error fetching product',
-          details: productError 
-        }, { status: 500 });
-      }
-      
-      // Count votes directly
-      const { data: votes, error: votesError } = await supabaseServer
-        .from('votes')
-        .select('vote_type')
-        .eq('product_id', productId);
-      
-      if (votesError) {
-        return NextResponse.json({ 
-          error: 'Error fetching votes',
-          details: votesError 
-        }, { status: 500 });
-      }
-      
-      const directUpvotes = votes?.filter(v => v.vote_type === 1).length || 0;
-      const directDownvotes = votes?.filter(v => v.vote_type === -1).length || 0;
-      const directScore = directUpvotes - directDownvotes;
-      
-      return NextResponse.json({
-        product: {
-          ...product,
-          upvotes: Number(product?.upvotes) || 0,
-          downvotes: Number(product?.downvotes) || 0,
-          score: Number(product?.score) || 0
-        },
-        directCounts: {
-          upvotes: directUpvotes,
-          downvotes: directDownvotes,
-          score: directScore
-        },
-        analysis: {
-          upvotesMatch: directUpvotes === Number(product?.upvotes),
-          downvotesMatch: directDownvotes === Number(product?.downvotes),
-          scoreMatch: directScore === Number(product?.score),
-          needsFixing: directUpvotes !== Number(product?.upvotes) || 
-                       directDownvotes !== Number(product?.downvotes) ||
-                       directScore !== Number(product?.score)
-        }
-      });
+    if (votesError) {
+      return {
+        id: productId,
+        error: 'Error fetching votes',
+        details: votesError,
+        fixed: false
+      };
     }
     
-    // Summary of all products (limit to 10 for performance)
-    const { data: products, error: productsError } = await supabaseServer
+    // Calculate actual counts
+    const actualUpvotes = votes.filter(v => v.vote_type === 1).length;
+    const actualDownvotes = votes.filter(v => v.vote_type === -1).length;
+    
+    // Get the current product record
+    const { data: product, error: productError } = await supabase
       .from('products')
-      .select('id, name, upvotes, downvotes, score')
-      .limit(10);
+      .select('id, name, upvotes, downvotes')
+      .eq('id', productId)
+      .single();
     
-    if (productsError) {
-      return NextResponse.json({ 
-        error: 'Error fetching products',
-        details: productsError 
-      }, { status: 500 });
+    if (productError) {
+      return {
+        id: productId,
+        error: 'Error fetching product',
+        details: productError,
+        fixed: false
+      };
     }
     
-    const results = await Promise.all(products.map(async (product) => {
-      try {
-        // Count votes directly
-        const { data: votes, error: votesError } = await supabaseServer
-          .from('votes')
-          .select('vote_type')
-          .eq('product_id', product.id);
-        
-        if (votesError) throw votesError;
-        
-        const directUpvotes = votes?.filter(v => v.vote_type === 1).length || 0;
-        const directDownvotes = votes?.filter(v => v.vote_type === -1).length || 0;
-        const directScore = directUpvotes - directDownvotes;
-        
-        return {
-          id: product.id,
-          name: product.name,
-          stored: {
-            upvotes: Number(product.upvotes) || 0,
-            downvotes: Number(product.downvotes) || 0,
-            score: Number(product.score) || 0
-          },
-          direct: {
-            upvotes: directUpvotes,
-            downvotes: directDownvotes,
-            score: directScore
-          },
-          needsFixing: directUpvotes !== Number(product.upvotes) || 
-                     directDownvotes !== Number(product.downvotes) ||
-                     directScore !== Number(product.score)
-        };
-      } catch (error) {
-        return {
-          id: product.id,
-          name: product.name,
-          error: error instanceof Error ? error.message : String(error)
-        };
-      }
-    }));
+    // Ensure numeric values
+    const currentUpvotes = Number(product.upvotes) || 0;
+    const currentDownvotes = Number(product.downvotes) || 0;
     
-    return NextResponse.json({
-      products: results,
-      summary: {
-        totalChecked: results.length,
-        needFixing: results.filter(r => r.needsFixing).length,
-        errors: results.filter(r => r.error).length
+    // Check if counts match
+    const upvotesMismatch = currentUpvotes !== actualUpvotes;
+    const downvotesMismatch = currentDownvotes !== actualDownvotes;
+    
+    // If no mismatch, nothing to fix
+    if (!upvotesMismatch && !downvotesMismatch) {
+      return {
+        id: productId,
+        name: product.name,
+        fixed: false,
+        message: 'Vote counts are already correct'
+      };
+    }
+    
+    // Calculate differences
+    const upvotesAdded = upvotesMismatch && actualUpvotes > currentUpvotes ? actualUpvotes - currentUpvotes : 0;
+    const upvotesRemoved = upvotesMismatch && actualUpvotes < currentUpvotes ? currentUpvotes - actualUpvotes : 0;
+    const downvotesAdded = downvotesMismatch && actualDownvotes > currentDownvotes ? actualDownvotes - currentDownvotes : 0;
+    const downvotesRemoved = downvotesMismatch && actualDownvotes < currentDownvotes ? currentDownvotes - actualDownvotes : 0;
+    
+    // Create a result object with details
+    const result = {
+      id: productId,
+      name: product.name,
+      fixed: true,
+      upvotesAdded,
+      upvotesRemoved,
+      downvotesAdded,
+      downvotesRemoved,
+      before: {
+        upvotes: currentUpvotes,
+        downvotes: currentDownvotes
+      },
+      after: {
+        upvotes: actualUpvotes,
+        downvotes: actualDownvotes
       }
-    });
+    };
+    
+    // If this is a dry run, just return the planned changes
+    if (dryRun) {
+      return {
+        ...result,
+        message: 'Dry run - no changes made'
+      };
+    }
+    
+    // Update the product's vote counts
+    const { error: updateError } = await supabase
+      .from('products')
+      .update({
+        upvotes: actualUpvotes,
+        downvotes: actualDownvotes
+      })
+      .eq('id', productId);
+    
+    if (updateError) {
+      return {
+        id: productId,
+        name: product.name,
+        error: 'Error updating product vote counts',
+        details: updateError,
+        fixed: false
+      };
+    }
+    
+    return {
+      ...result,
+      message: 'Vote counts fixed successfully'
+    };
   } catch (error) {
-    console.error('Vote fix status API error:', error);
-    return NextResponse.json({ 
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : String(error)
-    }, { status: 500 });
+    return {
+      id: productId,
+      error: 'Error fixing vote counts',
+      details: error instanceof Error ? error.message : String(error),
+      fixed: false
+    };
   }
 } 
