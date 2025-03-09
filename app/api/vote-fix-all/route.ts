@@ -1,26 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server';
+// Import polyfills first
+import '@/lib/polyfills';
 
-// Ensure this is always fresh
+import { NextRequest } from 'next/server';
+import { 
+  withPolyfills, 
+  withStaticBuildHandler,
+  createSuccessResponse,
+  createErrorResponse
+} from '@/lib/api-wrapper';
+
+// Ensure route is dynamic
 export const dynamic = 'force-dynamic';
 
-/**
- * API endpoint to fix all product vote counts in a single operation
- * GET - Returns status of all products and their vote counts
- * POST - Fix all product vote counts
- */
-export async function GET(request: NextRequest) {
-  return NextResponse.json({
-    success: true,
-    message: 'Vote fix all route is ready',
-    status: 'operational'
-  });
-}
-
-export async function POST(request: NextRequest) {
-  return NextResponse.json({
-    success: true,
-    message: 'Vote fix operation complete',
-    fixedCount: 0,
-    status: 'completed'
-  });
-} 
+// GET handler
+export const GET = withPolyfills(
+  withStaticBuildHandler(async (request) => {
+    try {
+      // Return success response
+      return createSuccessResponse({
+        message: "API is working",
+        timestamp: new Date().toISOString(),
+        endpoint: "/api/vote-fix-all"
+      });
+    } catch (error) {
+      console.error("Error in GET handler:", error);
+      return createErrorResponse(
+        "Internal server error", 
+        error instanceof Error ? error.message : null, 
+        500
+      );
+    }
+  })
+);

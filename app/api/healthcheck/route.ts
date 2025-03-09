@@ -1,17 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server';
+// Import polyfills first
+import '@/lib/polyfills';
 
+import { NextRequest } from 'next/server';
+import { 
+  withPolyfills, 
+  withStaticBuildHandler,
+  createSuccessResponse,
+  createErrorResponse
+} from '@/lib/api-wrapper';
+
+// Ensure route is dynamic
 export const dynamic = 'force-dynamic';
 
-// Mock response for healthcheck
-const mockResponse = {
-  status: 'ok',
-  timestamp: new Date().toISOString(),
-  version: '1.0.0',
-  environment: process.env.NODE_ENV || 'development'
-};
-
-// Simple handler that returns a mock response
-export async function GET(req: NextRequest) {
-  console.log('Healthcheck API called (mock implementation)');
-  return NextResponse.json(mockResponse);
-} 
+// GET handler
+export const GET = withPolyfills(
+  withStaticBuildHandler(async (request) => {
+    try {
+      // Return success response
+      return createSuccessResponse({
+        message: "API is working",
+        timestamp: new Date().toISOString(),
+        endpoint: "/api/healthcheck"
+      });
+    } catch (error) {
+      console.error("Error in GET handler:", error);
+      return createErrorResponse(
+        "Internal server error", 
+        error instanceof Error ? error.message : null, 
+        500
+      );
+    }
+  })
+);

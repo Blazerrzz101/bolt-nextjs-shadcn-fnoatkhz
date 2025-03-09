@@ -1,23 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server';
+// Import polyfills first
+import '@/lib/polyfills';
 
+import { NextRequest } from 'next/server';
+import { 
+  withPolyfills, 
+  withStaticBuildHandler,
+  createSuccessResponse,
+  createErrorResponse
+} from '@/lib/api-wrapper';
+
+// Ensure route is dynamic
 export const dynamic = 'force-dynamic';
 
-// Mock response for auth status
-const mockResponse = {
-  success: true,
-  isAuthenticated: false,
-  isAnonymous: true,
-  user: null,
-  message: "Auth status check (mock implementation)",
-  timestamp: new Date().toISOString(),
-  environment: {
-    nodeEnv: process.env.NODE_ENV || 'unknown',
-    isProduction: process.env.NODE_ENV === 'production',
-  }
-};
-
-// Simple handler that returns a mock response
-export async function GET(req: NextRequest) {
-  console.log('Auth Status API called (mock implementation)');
-  return NextResponse.json(mockResponse);
-} 
+// GET handler
+export const GET = withPolyfills(
+  withStaticBuildHandler(async (request) => {
+    try {
+      // Return success response
+      return createSuccessResponse({
+        message: "API is working",
+        timestamp: new Date().toISOString(),
+        endpoint: "/api/auth-status"
+      });
+    } catch (error) {
+      console.error("Error in GET handler:", error);
+      return createErrorResponse(
+        "Internal server error", 
+        error instanceof Error ? error.message : null, 
+        500
+      );
+    }
+  })
+);

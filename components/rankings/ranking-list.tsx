@@ -28,7 +28,7 @@ export function RankingList({ selectedCategory, searchQuery }: RankingListProps)
       setLoading(true);
       setError(null);
       
-      const origin = isBrowser ? window.location.origin : 'http://localhost:3000';
+      const origin = isBrowser ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL || "https://tier-d.vercel.app";
       const url = new URL('/api/products', origin);
       
       if (selectedCategory && selectedCategory !== 'all') {

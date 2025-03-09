@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tier'd - Community Ranked Products</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div class="min-h-screen p-8">
+    <header class="mb-12 text-center">
+      <h1 class="text-4xl font-bold mb-2">Tier'd</h1>
+      <p class="text-gray-600">Community-ranked products</p>
+    </header>
+
+    <main>
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-2xl font-bold mb-6">Top Products</h2>
+        
+        <div class="space-y-6" id="products-container">
+          <div class="text-center p-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <p class="mt-4 text-gray-700">Loading products...</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="mt-16 py-8 text-center text-gray-500 border-t">
+      <p>Tier'd - Community-driven product ranking</p>
+    </footer>
+  </div>
+
+  <script>
+    // Sample product data
+    const products = [
+      {
+        id: "prod_1",
+        name: "Premium Ergonomic Chair",
+        description: "Experience ultimate comfort with our premium ergonomic office chair, designed to support your back during long work hours.",
+        price: 299.99,
+        category: "office",
+        image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
+        upvotes: 15,
+        downvotes: 3,
+        score: 12
+      },
+      {
+        id: "prod_2",
+        name: "Smart Home Assistant Hub",
+        description: "Control your entire home with our voice-activated smart hub. Compatible with all major smart home ecosystems.",
+        price: 149.99,
+        category: "electronics",
+        image: "https://images.unsplash.com/photo-1546054454-aa26e2b734c7",
+        upvotes: 22,
+        downvotes: 5,
+        score: 17
+      },
+      {
+        id: "prod_3",
+        name: "Wireless Noise-Cancelling Headphones",
+        description: "Immerse yourself in your favorite music with our premium wireless headphones featuring active noise cancellation.",
+        price: 199.99,
+        category: "audio",
+        image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
+        upvotes: 18,
+        downvotes: 2,
+        score: 16
+      },
+      {
+        id: "prod_4",
+        name: "Ultralight Hiking Backpack",
+        description: "A 45L hiking backpack that weighs less than 2 pounds, perfect for multi-day adventures in the backcountry.",
+        price: 179.99,
+        category: "outdoor",
+        image: "https://images.unsplash.com/photo-1622560480605-d83c853bc5c3",
+        upvotes: 12,
+        downvotes: 1,
+        score: 11
+      },
+      {
+        id: "prod_5",
+        name: "Professional Chef's Knife Set",
+        description: "A set of 5 essential kitchen knives crafted from high-carbon stainless steel, perfect for professional and home chefs alike.",
+        price: 249.99,
+        category: "kitchen",
+        image: "https://images.unsplash.com/photo-1563861826100-c7f8049945e4",
+        upvotes: 9,
+        downvotes: 0,
+        score: 9
+      }
+    ];
+
+    // Function to render products
+    function renderProducts() {
+      const container = document.getElementById('products-container');
+      container.innerHTML = '';
+      
+      // Sort products by score
+      const sortedProducts = [...products].sort((a, b) => b.score - a.score);
+      
+      sortedProducts.forEach(product => {
+        const productEl = document.createElement('div');
+        productEl.className = 'border rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow bg-white';
+        productEl.innerHTML = `
+          <div class="flex items-start gap-4">
+            <div class="flex flex-col items-center space-y-1 min-w-16">
+              <button 
+                class="p-2 rounded-full hover:bg-gray-100"
+                aria-label="Upvote"
+                onclick="handleVote('${product.id}', 1)"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m18 15-6-6-6 6"/>
+                </svg>
+              </button>
+              <span class="font-bold">${product.score}</span>
+              <button 
+                class="p-2 rounded-full hover:bg-gray-100"
+                aria-label="Downvote"
+                onclick="handleVote('${product.id}', -1)"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
+              </button>
+            </div>
+            
+            <div class="flex-1">
+              <h3 class="text-xl font-semibold mb-2">${product.name}</h3>
+              <p class="text-gray-600 mb-2">${product.description}</p>
+              <div class="flex items-center justify-between">
+                <span class="text-sm bg-gray-100 px-2 py-1 rounded">
+                  ${product.category}
+                </span>
+                <span class="font-medium">$${product.price.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        `;
+        container.appendChild(productEl);
+      });
+    }
+
+    // Function to handle voting
+    function handleVote(productId, voteType) {
+      const product = products.find(p => p.id === productId);
+      if (!product) return;
+      
+      // Simple vote toggling for demo purposes
+      if (voteType === 1) {
+        product.upvotes++;
+        product.score++;
+      } else if (voteType === -1) {
+        product.downvotes++;
+        product.score--;
+      }
+      
+      // Re-render products
+      renderProducts();
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      // Wait a bit to simulate loading
+      setTimeout(renderProducts, 1000);
+    });
+  </script>
+</body>
+</html> 

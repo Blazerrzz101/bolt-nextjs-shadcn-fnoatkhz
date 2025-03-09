@@ -1,0 +1,402 @@
+{
+  "appDir": "app",
+  "timestamp": "2025-03-07T00:51:07.733Z",
+  "totalFiles": 121,
+  "routes": [
+    {
+      "path": "app/about/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/activities/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/activities/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/auth-status/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/categories/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/fix-permissions/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/health-check/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/healthcheck/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/log-activity/route.js",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/mock/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/mock-products/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/mock-votes/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/notifications/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/products/[id]/route.ts",
+      "type": "api",
+      "dynamicParams": true
+    },
+    {
+      "path": "app/api/products/product/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/products/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/profile/update/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/profile/upload/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/set-client-id/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/supabase-mock/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/system-status/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/vote/link-anonymous-votes/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/vote/remaining-votes/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/vote/reset/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/vote/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/vote-debug/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/vote-fix/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/vote-fix-all/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/vote-system-fix/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/api/vote-test/route.ts",
+      "type": "api",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/auth/callback/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/auth/layout.client.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/auth/layout.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/auth/sign-in/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/auth/sign-up/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/auth/verify-email/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/categories/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/dashboard/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/debug/auth/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/debug/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/home/layout.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/home/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/layout.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/main/layout.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/main/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/product-info/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/products/[slug]/page.tsx",
+      "type": "page",
+      "dynamicParams": true
+    },
+    {
+      "path": "app/products/asus-pg279qm/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/products/ducky-one-3/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/products/finalmouse-starlight/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/products/glorious-model-o/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/products/hyperx-cloud-alpha/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/products/keychron-q1/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/products/lg-27gp950/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/products/logitech-g-pro-superlight/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/products/logitech-g502/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/products/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/products/razer-viper-v2/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/products/steelseries-arctis-7/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/products/template/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/products/zowie-ec2/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/profile/[username]/page.tsx",
+      "type": "page",
+      "dynamicParams": true
+    },
+    {
+      "path": "app/profile/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/rankings/layout.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/rankings/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/reviews/layout.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/search/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/settings/layout.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/settings/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/test/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/test/vote/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/test/vote-system-fix/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/test/vote-tools/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/test-auth/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/test-vote/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/test-vote-system/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    },
+    {
+      "path": "app/threads/[id]/page.tsx",
+      "type": "page",
+      "dynamicParams": true
+    },
+    {
+      "path": "app/threads/page.tsx",
+      "type": "page",
+      "dynamicParams": false
+    }
+  ]
+}

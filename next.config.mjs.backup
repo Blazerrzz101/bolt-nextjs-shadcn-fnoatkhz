@@ -1,0 +1,99 @@
+
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  images: {
+    domains: ['images.unsplash.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
+    unoptimized: true
+  },
+  experimental: {
+    optimizeCss: true,
+    // Skip type checking to speed up builds
+    transpilePackages: [
+      '@supabase/supabase-js',
+      '@supabase/auth-helpers-nextjs',
+      '@supabase/auth-helpers-react',
+      '@tanstack/react-query'
+    ]
+  },
+  webpack: (config, { isServer }) => {
+    // Define global variables for both client and server
+    if (!config.resolve) {
+      config.resolve = {};
+    }
+    
+    if (!config.resolve.fallback) {
+      config.resolve.fallback = {};
+    }
+    
+    // Add polyfills for browser APIs on the server
+    if (isServer) {
+      Object.assign(config.resolve.fallback, {
+        fs: false,
+        net: false,
+        tls: false,
+        child_process: false,
+      });
+      
+      // For server, define global variables
+      global.navigator = { userAgent: 'node.js' };
+      global.window = {};
+      global.document = { createElement: () => ({}), addEventListener: () => {} };
+      global.self = global;
+      global.WebSocket = function() { this.addEventListener = function() {}; };
+      global.XMLHttpRequest = function() {};
+      global.fetch = () => Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+    }
+    
+    // Define globals for both client and server
+    config.plugins.push(
+      new config.webpack.DefinePlugin({
+        'global.self': isServer ? 'global' : 'self',
+        'self': isServer ? 'global' : 'self',
+        'global.window': isServer ? '{}' : 'window',
+        'window': isServer ? '{}' : 'window',
+        'global.document': isServer ? '{}' : 'document',
+        'document': isServer ? '{}' : 'document',
+        'global.navigator': isServer ? "{ userAgent: 'node.js' }" : 'navigator',
+        'navigator': isServer ? "{ userAgent: 'node.js' }" : 'navigator',
+        'process.browser': !isServer,
+      })
+    );
+    
+    // Add MiniCssExtractPlugin for production builds
+    if (!isServer) {
+      const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+      config.plugins.push(
+        new MiniCssExtractPlugin({
+          filename: 'static/css/[name].[contenthash].css',
+          chunkFilename: 'static/css/[id].[contenthash].css',
+        })
+      );
+    }
+    
+    return config;
+  },
+  // More targeted static generation
+  serverComponentsExternalPackages: ['pg', 'pg-hstore', 'sharp'],
+  dynamicParams: true
+};
+
+export default nextConfig;

@@ -1,0 +1,155 @@
+[
+  {
+    "path": "/about"
+  },
+  {
+    "path": "/activities"
+  },
+  {
+    "path": "/auth/callback"
+  },
+  {
+    "path": "/auth/layout.client.tsx"
+  },
+  {
+    "path": "/auth"
+  },
+  {
+    "path": "/auth/sign-in"
+  },
+  {
+    "path": "/auth/sign-up"
+  },
+  {
+    "path": "/auth/verify-email"
+  },
+  {
+    "path": "/categories"
+  },
+  {
+    "path": "/dashboard"
+  },
+  {
+    "path": "/debug/auth"
+  },
+  {
+    "path": "/debug"
+  },
+  {
+    "path": "/home"
+  },
+  {
+    "path": "/home"
+  },
+  {
+    "path": ""
+  },
+  {
+    "path": "/main"
+  },
+  {
+    "path": "/main"
+  },
+  {
+    "path": ""
+  },
+  {
+    "path": "/product-info"
+  },
+  {
+    "path": "/products/:slug"
+  },
+  {
+    "path": "/products/asus-pg279qm"
+  },
+  {
+    "path": "/products/ducky-one-3"
+  },
+  {
+    "path": "/products/finalmouse-starlight"
+  },
+  {
+    "path": "/products/glorious-model-o"
+  },
+  {
+    "path": "/products/hyperx-cloud-alpha"
+  },
+  {
+    "path": "/products/keychron-q1"
+  },
+  {
+    "path": "/products/lg-27gp950"
+  },
+  {
+    "path": "/products/logitech-g-pro-superlight"
+  },
+  {
+    "path": "/products/logitech-g502"
+  },
+  {
+    "path": "/products"
+  },
+  {
+    "path": "/products/razer-viper-v2"
+  },
+  {
+    "path": "/products/steelseries-arctis-7"
+  },
+  {
+    "path": "/products/template"
+  },
+  {
+    "path": "/products/zowie-ec2"
+  },
+  {
+    "path": "/profile/:username"
+  },
+  {
+    "path": "/profile"
+  },
+  {
+    "path": "/rankings"
+  },
+  {
+    "path": "/rankings"
+  },
+  {
+    "path": "/reviews"
+  },
+  {
+    "path": "/search"
+  },
+  {
+    "path": "/settings"
+  },
+  {
+    "path": "/settings"
+  },
+  {
+    "path": "/test"
+  },
+  {
+    "path": "/test/vote"
+  },
+  {
+    "path": "/test/vote-system-fix"
+  },
+  {
+    "path": "/test/vote-tools"
+  },
+  {
+    "path": "/test-auth"
+  },
+  {
+    "path": "/test-vote"
+  },
+  {
+    "path": "/test-vote-system"
+  },
+  {
+    "path": "/threads/:id"
+  },
+  {
+    "path": "/threads"
+  }
+]

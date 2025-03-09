@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "buildCommand": "CI='' NODE_OPTIONS=\"--require=./scripts/minimal-entry.js\" next build",
+  "installCommand": "npm install",
+  "outputDirectory": ".next",
+  "env": {
+    "MOCK_DB": "true",
+    "NODE_ENV": "production",
+    "ENABLE_REALTIME": "true",
+    "ENABLE_ANALYTICS": "true"
+  }
+}

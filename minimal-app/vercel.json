@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "env": {
+    "NEXT_PUBLIC_ENABLE_VOTES": "true",
+    "NEXT_PUBLIC_ENABLE_REVIEWS": "true",
+    "NEXT_PUBLIC_ENABLE_DISCUSSIONS": "true",
+    "NEXT_PUBLIC_MAX_VOTES_PER_DAY": "10"
+  }
+}

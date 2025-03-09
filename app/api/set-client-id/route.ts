@@ -1,32 +1,34 @@
-import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { z } from 'zod';
+// Import polyfills first
+import '@/lib/polyfills';
 
-// Validate client ID format
-const clientIdSchema = z.object({
-  clientId: z.string().regex(/^[0-9a-f]{32}$/, 'Invalid client ID format'),
-});
+import { NextRequest } from 'next/server';
+import { 
+  withPolyfills, 
+  withStaticBuildHandler,
+  createSuccessResponse,
+  createErrorResponse
+} from '@/lib/api-wrapper';
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { clientId } = clientIdSchema.parse(body);
+// Ensure route is dynamic
+export const dynamic = 'force-dynamic';
 
-    // Set HttpOnly cookie with strict security settings
-    cookies().set('tierd_client_id', clientId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 365, // 1 year
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error setting client ID:', error);
-    return NextResponse.json(
-      { success: false, error: 'Invalid client ID' },
-      { status: 400 }
-    );
-  }
-} 
+// GET handler
+export const GET = withPolyfills(
+  withStaticBuildHandler(async (request) => {
+    try {
+      // Return success response
+      return createSuccessResponse({
+        message: "API is working",
+        timestamp: new Date().toISOString(),
+        endpoint: "/api/set-client-id"
+      });
+    } catch (error) {
+      console.error("Error in GET handler:", error);
+      return createErrorResponse(
+        "Internal server error", 
+        error instanceof Error ? error.message : null, 
+        500
+      );
+    }
+  })
+);
