@@ -1,60 +1,34 @@
-import { NextRequest, NextResponse } from "next/server"
+// Import polyfills first
+import '@/lib/polyfills';
 
-export const dynamic = "force-dynamic"
-export const runtime = "nodejs" // Need nodejs runtime for file handling
+import { NextRequest } from 'next/server';
+import { 
+  withPolyfills, 
+  withStaticBuildHandler,
+  createSuccessResponse,
+  createErrorResponse
+} from '@/lib/api-wrapper';
 
-export async function POST(req: NextRequest) {
-  try {
-    // Use our mock implementation for now
-    console.log("Profile upload API called - using mock implementation")
-    
-    // Parse the form data
-    const formData = await req.formData()
-    const file = formData.get('file') as File
-    
-    if (!file) {
-      return NextResponse.json(
-        { success: false, error: "No file provided" },
-        { status: 400 }
-      )
+// Ensure route is dynamic
+export const dynamic = 'force-dynamic';
+
+// GET handler
+export const GET = withPolyfills(
+  withStaticBuildHandler(async (request) => {
+    try {
+      // Return success response
+      return createSuccessResponse({
+        message: "API is working",
+        timestamp: new Date().toISOString(),
+        endpoint: "/api/profile/upload"
+      });
+    } catch (error) {
+      console.error("Error in GET handler:", error);
+      return createErrorResponse(
+        "Internal server error", 
+        error instanceof Error ? error.message : null, 
+        500
+      );
     }
-    
-    // Check file size and type
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      return NextResponse.json(
-        { success: false, error: "File size exceeded 5MB limit" },
-        { status: 400 }
-      )
-    }
-    
-    if (!file.type.startsWith("image/")) {
-      return NextResponse.json(
-        { success: false, error: "Only image files are allowed" },
-        { status: 400 }
-      )
-    }
-    
-    // Generate a mock URL
-    const mockAvatarUrl = `https://mock-storage.example.com/avatars/user-${Date.now()}.jpg`
-    
-    // Return a success response for testing
-    return NextResponse.json({
-      success: true,
-      avatarUrl: mockAvatarUrl,
-      message: "Profile picture updated successfully (mock)",
-      mockData: {
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
-        timestamp: new Date().toISOString()
-      }
-    })
-    
-  } catch (error) {
-    console.error("Error in profile picture upload:", error instanceof Error ? error.message : String(error))
-    return NextResponse.json(
-      { success: false, error: "An unexpected error occurred" },
-      { status: 500 }
-    )
-  }
-} 
+  })
+);

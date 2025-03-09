@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tier'd Application - Static Version</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    h1 { 
+      color: #2563eb;
+      margin-bottom: 1rem;
+    }
+    .card {
+      background-color: #f8fafc;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+    .success {
+      background-color: #ecfdf5;
+      border-left: 4px solid #10b981;
+    }
+    .button {
+      display: inline-block;
+      background-color: #2563eb;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      text-decoration: none;
+      margin-top: 1rem;
+    }
+    .button:hover {
+      background-color: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tier'd Application</h1>
+  
+  <p>This is a pure static HTML fallback deployment.</p>
+  
+  <div class="card success">
+    <h2>Deployment Successful!</h2>
+    <p>Your static site has been successfully deployed to Vercel.</p>
+    <p>Timestamp: <span id="timestamp"></span></p>
+  </div>
+  
+  <div class="card">
+    <h2>Features</h2>
+    <ul>
+      <li>Zero JavaScript dependencies</li>
+      <li>No build process required</li>
+      <li>Extremely fast load times</li>
+      <li>Perfect lighthouse score</li>
+    </ul>
+  </div>
+  
+  <div class="card">
+    <h2>Next Steps</h2>
+    <p>Now that you have a successful deployment, you can:</p>
+    <ol>
+      <li>Gradually add back React components</li>
+      <li>Add API routes one by one</li>
+      <li>Test each addition to identify specific issues</li>
+    </ol>
+    <a href="https://vercel.com/dashboard" class="button">Go to Vercel Dashboard</a>
+  </div>
+  
+  <footer>
+    <p><small>Pure static HTML fallback - No JavaScript frameworks used</small></p>
+  </footer>
+
+  <script>
+    // Minimal JavaScript for timestamp
+    document.getElementById('timestamp').textContent = new Date().toLocaleString();
+  </script>
+</body>
+</html> 

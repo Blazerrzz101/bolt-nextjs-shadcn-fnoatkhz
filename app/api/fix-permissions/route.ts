@@ -1,12 +1,34 @@
-import { NextResponse } from 'next/server';
+// Import polyfills first
+import '@/lib/polyfills';
 
-// Mock response for static builds
-const mockResponse = {
-  success: true,
-  message: "Permissions fixed (mock)",
-};
+import { NextRequest } from 'next/server';
+import { 
+  withPolyfills, 
+  withStaticBuildHandler,
+  createSuccessResponse,
+  createErrorResponse
+} from '@/lib/api-wrapper';
 
-// Simple handler that returns a mock response
-export async function POST() {
-  return NextResponse.json(mockResponse);
-} 
+// Ensure route is dynamic
+export const dynamic = 'force-dynamic';
+
+// GET handler
+export const GET = withPolyfills(
+  withStaticBuildHandler(async (request) => {
+    try {
+      // Return success response
+      return createSuccessResponse({
+        message: "API is working",
+        timestamp: new Date().toISOString(),
+        endpoint: "/api/fix-permissions"
+      });
+    } catch (error) {
+      console.error("Error in GET handler:", error);
+      return createErrorResponse(
+        "Internal server error", 
+        error instanceof Error ? error.message : null, 
+        500
+      );
+    }
+  })
+);

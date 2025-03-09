@@ -49,8 +49,74 @@
 - Use dynamic imports for ESM modules in CommonJS scripts
 - Implement health check systems to verify all API endpoints are working properly
 - Create production startup scripts to ensure all required data is available and valid before starting the server
+- When deploying Supabase applications to Vercel or other Node.js environments, handle the "self is not defined" error by creating polyfills for browser globals
+- Create a custom Supabase client wrapper that handles both server and client environments safely
+- Use the withPolyfills wrapper pattern to ensure all API routes properly handle server-side rendering
+- Add polyfill imports at the top of API route files to ensure they're loaded first
+- Use a custom Vercel entry point script to ensure polyfills are loaded early in the build process
+- Add the NODE_OPTIONS environment variable to include polyfill setup in all Node.js processes
+- Create scripts to automatically update and fix API routes to use the proper wrapper pattern
+- Implement helper functions for creating consistent API responses across the application
+- Use proper TypeScript type checking for error objects by using instanceof Error checks
+- Implement feature flags through environment variables to enable easy toggling of features in different environments
 
 # Scratchpad
+
+## Current Task: Fix "self is not defined" Error for Vercel Deployment
+
+### Summary of the Issue
+The Supabase client library attempts to use the global variable `self`, which is not defined in Node.js environments like Vercel. This causes deployment errors when trying to build the application.
+
+### Solution Implemented
+We created a comprehensive solution with several components:
+
+1. **Polyfill Library** (`lib/polyfills.js`):
+   - Creates global objects like `self`, `window`, and `navigator` if they don't exist
+   - Exposes a helper function `ensurePolyfills()` that can be called to verify they're working
+
+2. **Supabase Safe Client** (`lib/supabase-safe-client.js`):
+   - Wraps Supabase client initialization with proper error handling
+   - Checks for mock mode and provides alternative implementation when needed
+   - Handles both server and client environments safely
+
+3. **API Wrapper** (`lib/api-wrapper.js`):
+   - Provides utility functions for API routes
+   - Includes wrappers for handlers that ensure polyfills are applied
+   - Provides consistent success and error response formats
+
+4. **Vercel Entry Point** (`scripts/vercel-entry.js`):
+   - Sets up polyfills at the very beginning of the build process
+   - Exports a verification function to ensure polyfills are properly set up
+
+5. **API Route Updates**:
+   - Created scripts to update and fix API routes to use our wrapper pattern
+   - Ensures all API routes import polyfills at the top
+   - Wraps handler functions with `withPolyfills` and `withStaticBuildHandler`
+
+6. **Vercel Configuration**:
+   - Updated vercel.json to use our custom build script
+   - Added NODE_OPTIONS to include the entry point polyfill in all Node.js processes
+   - Set environment variables for mock mode during builds
+
+7. **Deployment Script** (`scripts/deploy-polyfilled.sh`):
+   - Combines all the fixes into a single deployment flow
+   - Includes verification steps to ensure everything is properly set up
+   - Provides a seamless deployment experience that handles the error
+
+### Lessons Learned
+1. Supabase client library assumes browser globals are available
+2. Node.js SSR environments need polyfills for browser globals like `self`
+3. Polyfills must be loaded before any Supabase code runs
+4. Use of dynamic imports can help control the order of code execution
+5. Robust error handling is essential for proper fallbacks in different environments
+6. Mock data implementations are critical for testing and development
+7. A comprehensive deployment script improves reliability
+
+### Next Steps
+1. Deploy the application using the new polyfilled deployment script
+2. Verify all functionality is working on the deployed site
+3. Document the solution in the project README for future reference
+4. Consider adding more tests to ensure the polyfill solution continues to work
 
 ## Current Task: Fix and Enhance Tier'd Application
 

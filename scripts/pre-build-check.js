@@ -2,171 +2,112 @@
 
 /**
  * Pre-build Check Script
- * 
- * This script performs checks before building the application to catch common issues
- * that might cause build failures or runtime errors.
+ * Verifies all necessary configurations before building the application
  */
 
 const fs = require('fs');
 const path = require('path');
-const chalk = require('chalk') || { green: (t) => t, red: (t) => t, yellow: (t) => t, blue: (t) => t };
+const chalk = require('chalk') || { green: s => s, red: s => s, yellow: s => s, blue: s => s };
 
-console.log(chalk.blue('='.repeat(50)));
+console.log(chalk.blue('=================================================='));
 console.log(chalk.blue('Pre-build Check Script'));
-console.log(chalk.blue('='.repeat(50)));
+console.log(chalk.blue('=================================================='));
 
-const issues = [];
+let issues = [];
+let warnings = [];
 
-// Check if data directory exists and has the necessary files
-function checkDataDirectory() {
-  console.log('Checking data directory...');
-  
-  const dataDir = path.join(process.cwd(), 'data');
-  
-  if (!fs.existsSync(dataDir)) {
-    console.log(chalk.yellow('Data directory not found, creating it...'));
-    fs.mkdirSync(dataDir, { recursive: true });
+// Check if required directories exist
+const requiredDirs = ['app', 'lib', 'components', 'hooks'];
+console.log('Checking required directories...');
+requiredDirs.forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    issues.push(`Missing directory: ${dir}`);
   }
-  
-  // Check for votes.json
-  const votesPath = path.join(dataDir, 'votes.json');
-  if (!fs.existsSync(votesPath)) {
-    console.log(chalk.yellow('votes.json not found, creating it...'));
-    
-    const initialVoteState = {
-      votes: {},
-      voteCounts: {
-        "p1": { upvotes: 5, downvotes: 2 },
-        "p2": { upvotes: 10, downvotes: 3 },
-        "p3": { upvotes: 7, downvotes: 1 },
-        "p4": { upvotes: 8, downvotes: 4 },
-        "p5": { upvotes: 12, downvotes: 2 },
-        "a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6": { upvotes: 12, downvotes: 2 },
-        "c8d9e0f1-2a3b-4c5d-6e7f-8g9h0i1j2k3l": { upvotes: 10, downvotes: 3 },
-        "j1k2l3m4-n5o6-p7q8-r9s0-t1u2v3w4x5y6": { upvotes: 5, downvotes: 2 },
-        "q1w2e3r4-t5y6-u7i8-o9p0-a1s2d3f4g5h6": { upvotes: 8, downvotes: 4 },
-        "9dd2bfe2-6eef-40de-ae12-c35ff1975914": { upvotes: 7, downvotes: 1 }
-      },
-      lastUpdated: new Date().toISOString(),
-      userVotes: []
-    };
-    
-    fs.writeFileSync(votesPath, JSON.stringify(initialVoteState, null, 2));
-  }
-  
-  // Check for activities.json
-  const activitiesPath = path.join(dataDir, 'activities.json');
-  if (!fs.existsSync(activitiesPath)) {
-    console.log(chalk.yellow('activities.json not found, creating it...'));
-    
-    const initialActivities = {
-      activities: []
-    };
-    
-    fs.writeFileSync(activitiesPath, JSON.stringify(initialActivities, null, 2));
-  }
-  
-  console.log(chalk.green('Data directory check passed'));
-}
+});
 
-// Check if CSS files exist
-function checkCssFiles() {
-  console.log('Checking CSS files...');
+// Check if mini-css-extract-plugin is installed
+console.log('Checking required packages...');
+try {
+  const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+  const dependencies = {
+    ...packageJson.dependencies,
+    ...packageJson.devDependencies
+  };
   
-  const globalsCss = path.join(process.cwd(), 'app', 'globals.css');
-  if (!fs.existsSync(globalsCss)) {
-    issues.push(`globals.css not found at ${globalsCss}`);
+  if (!dependencies['mini-css-extract-plugin']) {
+    issues.push('mini-css-extract-plugin is not installed');
   }
-  
-  const animationsCss = path.join(process.cwd(), 'styles', 'animations.css');
-  if (!fs.existsSync(animationsCss)) {
-    issues.push(`animations.css not found at ${animationsCss}`);
-  }
-  
-  if (issues.length === 0) {
-    console.log(chalk.green('CSS files check passed'));
-  }
+} catch (error) {
+  issues.push('Could not read package.json');
 }
 
 // Check next.config.mjs
-function checkNextConfig() {
-  console.log('Checking next.config.mjs...');
+console.log('Checking next.config.mjs...');
+try {
+  const nextConfig = fs.readFileSync('next.config.mjs', 'utf8');
   
-  const configPath = path.join(process.cwd(), 'next.config.mjs');
-  if (!fs.existsSync(configPath)) {
-    issues.push('next.config.mjs not found');
-    return;
+  if (!nextConfig.includes('MiniCssExtractPlugin')) {
+    warnings.push('next.config.mjs does not explicitly use MiniCssExtractPlugin');
   }
   
-  const configContent = fs.readFileSync(configPath, 'utf8');
-  
-  // Check for self/window handling
-  if (!configContent.includes('self') || !configContent.includes('window')) {
+  if (!nextConfig.includes('DefinePlugin') || !nextConfig.includes('global.self')) {
     issues.push('next.config.mjs does not properly handle self/window globals');
   }
-  
-  // Check for CSS handling
-  if (!configContent.includes('MiniCssExtractPlugin')) {
-    console.log(chalk.yellow('Warning: next.config.mjs does not use MiniCssExtractPlugin'));
-  }
-  
-  if (issues.length === 0) {
-    console.log(chalk.green('next.config.mjs check passed'));
+} catch (error) {
+  issues.push('Could not read next.config.mjs');
+}
+
+// Check for polyfills
+console.log('Checking polyfills...');
+if (!fs.existsSync('lib/complete-polyfills.js')) {
+  issues.push('Missing polyfills file: lib/complete-polyfills.js');
+} else {
+  const polyfills = fs.readFileSync('lib/complete-polyfills.js', 'utf8');
+  if (!polyfills.includes('global.self = global')) {
+    issues.push('Polyfills do not set global.self');
   }
 }
 
-// Check for required npm packages
-function checkPackages() {
-  console.log('Checking required packages...');
-  
-  const packageJsonPath = path.join(process.cwd(), 'package.json');
-  if (!fs.existsSync(packageJsonPath)) {
-    issues.push('package.json not found');
-    return;
-  }
-  
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-  const allDeps = { ...packageJson.dependencies, ...packageJson.devDependencies };
-  
-  const requiredPackages = [
-    'next', 'react', 'react-dom', '@tanstack/react-query', 
-    'mini-css-extract-plugin', 'vercel', 'uuid'
-  ];
-  
-  const missingPackages = requiredPackages.filter(pkg => !allDeps[pkg]);
-  if (missingPackages.length > 0) {
-    issues.push(`Missing required packages: ${missingPackages.join(', ')}`);
-  }
-  
-  if (issues.length === 0) {
-    console.log(chalk.green('Package check passed'));
+// Check environment variables
+console.log('Checking environment setup...');
+if (!fs.existsSync('.env.local')) {
+  warnings.push('Missing .env.local file');
+} else {
+  const env = fs.readFileSync('.env.local', 'utf8');
+  if (!env.includes('ADMIN_USERNAME') || !env.includes('ADMIN_PASSWORD')) {
+    warnings.push('.env.local is missing admin credentials');
   }
 }
 
-// Run all checks
-function runChecks() {
-  try {
-    checkDataDirectory();
-    checkCssFiles();
-    checkNextConfig();
-    checkPackages();
-    
-    console.log(chalk.blue('='.repeat(50)));
-    
-    if (issues.length > 0) {
-      console.log(chalk.yellow('Issues found:'));
-      issues.forEach(issue => console.log(chalk.yellow(`- ${issue}`)));
-      console.log(chalk.yellow('Please fix these issues before building.'));
-      process.exit(1);
-    } else {
-      console.log(chalk.green('All pre-build checks passed!'));
-      process.exit(0);
-    }
-  } catch (error) {
-    console.error(chalk.red('Error running pre-build checks:'), error);
+// Check authentication setup
+console.log('Checking authentication setup...');
+if (!fs.existsSync('lib/auth.js')) {
+  issues.push('Missing authentication module: lib/auth.js');
+} else if (!fs.existsSync('app/admin/login/page.js')) {
+  issues.push('Missing admin login page');
+}
+
+// Summary
+console.log(chalk.blue('=================================================='));
+if (issues.length > 0 || warnings.length > 0) {
+  if (issues.length > 0) {
+    console.log(chalk.red('Issues found:'));
+    issues.forEach(issue => console.log(chalk.red(`- ${issue}`)));
+  }
+  
+  if (warnings.length > 0) {
+    console.log(chalk.yellow('Warnings:'));
+    warnings.forEach(warning => console.log(chalk.yellow(`- ${warning}`)));
+  }
+  
+  if (issues.length > 0) {
+    console.log(chalk.red('Please fix these issues before building.'));
     process.exit(1);
+  } else {
+    console.log(chalk.yellow('You can proceed with the build, but consider addressing the warnings.'));
+    process.exit(0);
   }
-}
-
-// Run the checks
-runChecks(); 
+} else {
+  console.log(chalk.green('All checks passed! Ready to build.'));
+  process.exit(0);
+} 

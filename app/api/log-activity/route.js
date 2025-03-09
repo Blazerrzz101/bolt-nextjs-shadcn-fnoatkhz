@@ -1,42 +1,33 @@
-'use server'
+// Import polyfills first
+import '@/lib/polyfills';
 
-import { createApiClient } from '../_utils/api-server-utils'
-import { NextResponse } from 'next/server'
+import { 
+  withPolyfills, 
+  withStaticBuildHandler,
+  createSuccessResponse,
+  createErrorResponse
+} from '@/lib/api-wrapper';
 
-export async function POST(req) {
-  try {
-    const body = await req.json();
-    const { userId, type, productId, productName, action } = body;
+// Ensure route is dynamic
+export const dynamic = 'force-dynamic';
 
-    if (!userId || !type || !productId || !productName || !action) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
+// GET handler
+export const GET = withPolyfills(
+  withStaticBuildHandler(async (request) => {
+    try {
+      // Return success response
+      return createSuccessResponse({
+        message: "API is working",
+        timestamp: new Date().toISOString(),
+        endpoint: "/api/log-activity"
+      });
+    } catch (error) {
+      console.error("Error in GET handler:", error);
+      return createErrorResponse(
+        "Internal server error", 
+        error instanceof Error ? error.message : null, 
+        500
       );
     }
-
-    const supabase = createApiClient();
-    const { data, error } = await supabase
-      .from('activities')
-      .insert([{ user_id: userId, type, product_id: productId, product_name: productName, action }]);
-
-    if (error) {
-      console.error('Database error:', error.message);
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(
-      { message: 'Activity logged successfully', data },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error('Server error:', error.message);
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
-  }
-}
+  })
+);

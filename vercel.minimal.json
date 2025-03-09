@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "buildCommand": "NODE_OPTIONS=\"--require=./lib/standalone-polyfills.js\" next build",
+  "installCommand": "npm install",
+  "outputDirectory": ".next",
+  "env": {
+    "MOCK_DB": "true"
+  }
+} 

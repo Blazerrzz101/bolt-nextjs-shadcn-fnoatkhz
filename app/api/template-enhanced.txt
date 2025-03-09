@@ -1,0 +1,123 @@
+/**
+ * Enhanced API Route Template
+ * 
+ * This is a template for creating API routes using the enhanced infrastructure.
+ * Copy this file to create new API routes and modify as needed.
+ */
+
+// Import enhanced polyfills first
+import '../../../lib/enhanced-polyfills.js';
+
+// Import the enhanced API wrapper
+import { 
+  withEnhancedApi, 
+  createSuccessResponse, 
+  createErrorResponse, 
+  parseRequestBody,
+  getQueryParams,
+  getMockData,
+  getClientForRequest
+} from '@/lib/api-wrapper-enhanced';
+
+/**
+ * GET handler
+ * 
+ * @param {Request} request - The request object
+ * @returns {Response} The response object
+ */
+async function handleGet(request) {
+  try {
+    // Get query parameters
+    const params = getQueryParams(request);
+    
+    // Get Supabase client
+    const supabase = getClientForRequest(request);
+    
+    // Check if mock mode is enabled
+    const mockMode = process.env.MOCK_DB === 'true' || process.env.DEPLOY_ENV === 'production';
+    
+    let data;
+    if (mockMode) {
+      // Use mock data
+      data = getMockData('products');
+    } else {
+      // Use real data from Supabase
+      const { data: dbData, error } = await supabase
+        .from('your_table')
+        .select('*');
+        
+      if (error) {
+        throw new Error(`Database error: ${error.message}`);
+      }
+      
+      data = dbData;
+    }
+    
+    // Return success response
+    return createSuccessResponse(data);
+  } catch (error) {
+    console.error('API Error:', error);
+    return createErrorResponse(error.message);
+  }
+}
+
+/**
+ * POST handler
+ * 
+ * @param {Request} request - The request object
+ * @returns {Response} The response object
+ */
+async function handlePost(request) {
+  try {
+    // Parse request body
+    const body = await parseRequestBody(request);
+    
+    // Validate request body
+    if (!body || typeof body !== 'object') {
+      return createErrorResponse('Invalid request body', null, 400);
+    }
+    
+    // Get Supabase client
+    const supabase = getClientForRequest(request);
+    
+    // Check if mock mode is enabled
+    const mockMode = process.env.MOCK_DB === 'true' || process.env.DEPLOY_ENV === 'production';
+    
+    let result;
+    if (mockMode) {
+      // Simulate successful operation
+      result = { id: Date.now(), ...body };
+    } else {
+      // Insert into Supabase
+      const { data, error } = await supabase
+        .from('your_table')
+        .insert(body)
+        .select()
+        .single();
+        
+      if (error) {
+        throw new Error(`Database error: ${error.message}`);
+      }
+      
+      result = data;
+    }
+    
+    // Return success response
+    return createSuccessResponse(result, 'Resource created successfully', 201);
+  } catch (error) {
+    console.error('API Error:', error);
+    return createErrorResponse(error.message);
+  }
+}
+
+/**
+ * Export handlers wrapped with enhanced API utilities
+ */
+export const GET = withEnhancedApi(handleGet);
+export const POST = withEnhancedApi(handlePost);
+
+/**
+ * You can add more handlers as needed
+ */
+// export const PUT = withEnhancedApi(handlePut);
+// export const DELETE = withEnhancedApi(handleDelete); 

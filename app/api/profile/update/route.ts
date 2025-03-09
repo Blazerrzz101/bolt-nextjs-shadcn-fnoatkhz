@@ -1,32 +1,34 @@
-import { NextRequest, NextResponse } from "next/server"
+// Import polyfills first
+import '@/lib/polyfills';
 
-export const dynamic = "force-dynamic"
+import { NextRequest } from 'next/server';
+import { 
+  withPolyfills, 
+  withStaticBuildHandler,
+  createSuccessResponse,
+  createErrorResponse
+} from '@/lib/api-wrapper';
 
-export async function POST(req: NextRequest) {
-  try {
-    // Use our mock implementation for now
-    console.log("Profile update API called - using mock implementation")
-    
-    // Parse request body
-    const { displayName, bio, avatarUrl } = await req.json()
-    
-    // Return a success response for testing
-    return NextResponse.json({
-      success: true,
-      message: "Profile updated successfully (mock)",
-      mockData: {
-        displayName,
-        bio,
-        avatarUrl,
-        timestamp: new Date().toISOString()
-      }
-    })
-    
-  } catch (error) {
-    console.error("Error in profile update:", error instanceof Error ? error.message : String(error))
-    return NextResponse.json(
-      { success: false, error: "An unexpected error occurred" },
-      { status: 500 }
-    )
-  }
-} 
+// Ensure route is dynamic
+export const dynamic = 'force-dynamic';
+
+// GET handler
+export const GET = withPolyfills(
+  withStaticBuildHandler(async (request) => {
+    try {
+      // Return success response
+      return createSuccessResponse({
+        message: "API is working",
+        timestamp: new Date().toISOString(),
+        endpoint: "/api/profile/update"
+      });
+    } catch (error) {
+      console.error("Error in GET handler:", error);
+      return createErrorResponse(
+        "Internal server error", 
+        error instanceof Error ? error.message : null, 
+        500
+      );
+    }
+  })
+);

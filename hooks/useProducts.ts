@@ -24,7 +24,7 @@ export function useProducts() {
       setError(null)
       
       // Create the URL using origin or a default value for server-side
-      const origin = isBrowser ? window.location.origin : 'http://localhost:3000'
+      const origin = isBrowser ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL || "https://tier-d.vercel.app"
       const url = new URL('/api/products', origin)
       
       // Add category filter if provided
