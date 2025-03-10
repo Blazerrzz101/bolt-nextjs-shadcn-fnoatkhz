@@ -1,0 +1,43 @@
+{
+  "version": 2,
+  "public": true,
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "env": {
+    "MOCK_DB": "true",
+    "NODE_ENV": "production",
+    "ENABLE_REALTIME": "true",
+    "ENABLE_ANALYTICS": "true",
+    "ADMIN_USERNAME": "admin",
+    "ADMIN_PASSWORD": "admin123",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://your-project.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "your-anon-key",
+    "SUPABASE_SERVICE_ROLE_KEY": "your-supabase-service-role-key",
+    "NEXT_PUBLIC_SITE_URL": "https://tierd.vercel.app",
+    "DEPLOY_ENV": "production",
+    "NEXT_PUBLIC_ENABLE_VOTES": "true",
+    "NEXT_PUBLIC_ENABLE_REVIEWS": "true",
+    "NEXT_PUBLIC_ENABLE_DISCUSSIONS": "true",
+    "NEXT_PUBLIC_MAX_VOTES_PER_DAY": "10"
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Credentials", "value": "true" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT" },
+        { "key": "Access-Control-Allow-Headers", "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version" },
+        { "key": "Cache-Control", "value": "public, max-age=60, s-maxage=60, stale-while-revalidate=300" }
+      ]
+    },
+    {
+      "source": "/admin/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    }
+  ]
+}

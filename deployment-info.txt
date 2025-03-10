@@ -1,0 +1,47 @@
+Tier'd Application Deployment Information
+=========================================
+
+Deployment URL: https://tierdminimal-d8vuq3ash-jimmonty7-gmailcoms-projects.vercel.app
+API Health Check: https://tierdminimal-d8vuq3ash-jimmonty7-gmailcoms-projects.vercel.app/api/health-check
+
+DEPLOYMENT STRATEGY FOR FULL FUNCTIONALITY:
+
+We have successfully deployed a minimal version of the Tier'd application. To add the full functionality, follow these steps:
+
+1. CORE FEATURES (ALREADY DEPLOYED):
+   - Basic Next.js application structure
+   - Simple homepage layout
+   - Health check API endpoint
+
+2. ADD MOCK DATA (NEXT):
+   - Create and deploy mock product data
+   - Implement categories API
+   - Add simple product listing page
+
+3. ADD VOTING FUNCTIONALITY:
+   - Implement voting API with mock storage
+   - Create VoteButton component
+   - Add optimistic UI updates
+
+4. ADD REVIEW SYSTEM:
+   - Implement reviews API
+   - Create review form and listing components
+   - Add real-time updates for reviews
+
+5. ADD ADMIN DASHBOARD:
+   - Create admin login page
+   - Implement basic authentication
+   - Create dashboard with analytics
+   - Add product and review management
+
+For each step, follow this process:
+1. Create the minimal required files
+2. Test locally to ensure they work
+3. Deploy incrementally to Vercel
+4. Verify functionality before moving to the next step
+
+ADMIN CREDENTIALS:
+Username: admin
+Password: Tier-dAdmin2024!
+(Update these in the Vercel dashboard after deployment)
+

@@ -1,0 +1,58 @@
+// Import polyfills at the top
+import '../../../scripts/supabase-fix.js';
+
+// Import the Supabase client
+import getSupabaseClient, { isMockMode } from '@/lib/supabase-client';
+
+export async function GET(request) {
+  try {
+    // Check for mock mode
+    if (isMockMode()) {
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          data: {}, 
+          mockMode: true 
+        }),
+        { 
+          status: 200,
+          headers: { 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    // Get Supabase client
+    const supabase = getSupabaseClient();
+    
+    // Your Supabase query here
+    const { data, error } = await supabase.from('your_table').select('*');
+    
+    if (error) {
+      throw error;
+    }
+    
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        data 
+      }),
+      { 
+        status: 200,
+        headers: { 'Content-Type': 'application/json' } 
+      }
+    );
+  } catch (error) {
+    console.error('API error:', error);
+    
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message 
+      }),
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' } 
+      }
+    );
+  }
+}
