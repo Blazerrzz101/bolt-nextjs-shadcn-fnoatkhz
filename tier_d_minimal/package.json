@@ -1,0 +1,24 @@
+{
+  "name": "tier-d",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^14.0.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.44.3",
+    "react-icons": "^4.8.0",
+    "uuid": "^9.0.0",
+    "zustand": "^4.3.8",
+    "axios": "^1.4.0",
+    "date-fns": "^2.30.0",
+    "classnames": "^2.3.2",
+    "recharts": "^2.7.1",
+    "js-cookie": "^3.0.5"
+  }
+} 

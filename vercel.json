@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "CI='' NODE_OPTIONS=\"--require=./scripts/minimal-entry.js\" next build",
+  "buildCommand": "npm run vercel-build",
   "installCommand": "npm install",
   "outputDirectory": ".next",
   "env": {
@@ -10,25 +10,47 @@
     "ENABLE_ANALYTICS": "true",
     "ADMIN_USERNAME": "admin",
     "ADMIN_PASSWORD": "REMOVED_EXPOSED_ADMIN_PASSWORD",
-    "CACHE_TTL": "300",
-    "RATE_LIMIT_DEFAULT": "60",
-    "RATE_LIMIT_STRICT": "20"
+    "SUPABASE_SERVICE_ROLE_KEY": "REMOVED_SUPABASE_SERVICE_ROLE_KEY",
+    "NEXT_PUBLIC_SITE_URL": "https://qmyvtvvdnoktrwzrdflp.supabase.co",
+    "DEPLOY_ENV": "production",
+    "NEXT_PUBLIC_ENABLE_VOTES": "true",
+    "NEXT_PUBLIC_ENABLE_REVIEWS": "true",
+    "NEXT_PUBLIC_ENABLE_DISCUSSIONS": "true",
+    "NEXT_PUBLIC_MAX_VOTES_PER_DAY": "10"
   },
   "headers": [
     {
       "source": "/api/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Credentials", "value": "true" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT" },
-        { "key": "Access-Control-Allow-Headers", "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version" },
-        { "key": "Cache-Control", "value": "public, max-age=60, s-maxage=60, stale-while-revalidate=300" }
+        {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=60, s-maxage=60, stale-while-revalidate=300"
+        }
       ]
     },
     {
       "source": "/admin/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        }
       ]
     }
   ]

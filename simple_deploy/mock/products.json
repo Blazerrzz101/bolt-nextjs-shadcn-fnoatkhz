@@ -1,0 +1,134 @@
+[
+  {
+    "id": "prod_1",
+    "name": "Premium Ergonomic Chair",
+    "description": "Experience ultimate comfort with our premium ergonomic office chair, designed to support your back during long work hours.",
+    "price": 299.99,
+    "category": "office",
+    "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+    "upvotes": 15,
+    "downvotes": 3,
+    "score": 12
+  },
+  {
+    "id": "prod_2",
+    "name": "Smart Home Assistant Hub",
+    "description": "Control your entire home with our voice-activated smart hub. Compatible with all major smart home ecosystems.",
+    "price": 149.99,
+    "category": "electronics",
+    "image": "https://images.unsplash.com/photo-1546054454-aa26e2b734c7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80",
+    "upvotes": 22,
+    "downvotes": 5,
+    "score": 17
+  },
+  {
+    "id": "prod_3",
+    "name": "Wireless Noise-Cancelling Headphones",
+    "description": "Immerse yourself in your favorite music with our premium wireless headphones featuring active noise cancellation.",
+    "price": 199.99,
+    "category": "audio",
+    "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+    "upvotes": 18,
+    "downvotes": 2,
+    "score": 16
+  },
+  {
+    "id": "prod_4",
+    "name": "Ultralight Hiking Backpack",
+    "description": "A 45L hiking backpack that weighs less than 2 pounds, perfect for multi-day adventures in the backcountry.",
+    "price": 179.99,
+    "category": "outdoor",
+    "image": "https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+    "upvotes": 12,
+    "downvotes": 1,
+    "score": 11
+  },
+  {
+    "id": "prod_5",
+    "name": "Professional Chef's Knife Set",
+    "description": "A set of 5 essential kitchen knives crafted from high-carbon stainless steel, perfect for professional and home chefs alike.",
+    "price": 249.99,
+    "category": "kitchen",
+    "image": "https://images.unsplash.com/photo-1563861826100-c7f8049945e4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80",
+    "upvotes": 9,
+    "downvotes": 0,
+    "score": 9
+  },
+  {
+    "id": "prod_6",
+    "name": "Ultra HD Smart TV",
+    "description": "65-inch Ultra HD Smart TV with HDR and built-in streaming apps, delivering stunning picture quality and seamless connectivity.",
+    "price": 899.99,
+    "category": "electronics",
+    "image": "https://images.unsplash.com/photo-1593784991095-a205069470b6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+    "upvotes": 25,
+    "downvotes": 6,
+    "score": 19
+  },
+  {
+    "id": "prod_7",
+    "name": "Portable Espresso Maker",
+    "description": "Make barista-quality espresso anywhere with this compact, hand-powered espresso maker. No batteries or electricity required.",
+    "price": 89.99,
+    "category": "kitchen",
+    "image": "https://images.unsplash.com/photo-1559496417-e7f25cb247f3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=764&q=80",
+    "upvotes": 14,
+    "downvotes": 1,
+    "score": 13
+  },
+  {
+    "id": "prod_8",
+    "name": "Smart Fitness Watch",
+    "description": "Track your workouts, heart rate, sleep, and more with our advanced fitness watch that seamlessly syncs with your smartphone.",
+    "price": 149.99,
+    "category": "fitness",
+    "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1099&q=80",
+    "upvotes": 31,
+    "downvotes": 4,
+    "score": 27
+  },
+  {
+    "id": "prod_9",
+    "name": "Adjustable Dumbbell Set",
+    "description": "Space-saving dumbbell set that adjusts from 5 to 52.5 pounds with the turn of a dial, replacing 15 sets of weights.",
+    "price": 349.99,
+    "category": "fitness",
+    "image": "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80",
+    "upvotes": 17,
+    "downvotes": 2,
+    "score": 15
+  },
+  {
+    "id": "prod_10",
+    "name": "Compact Air Purifier",
+    "description": "HEPA air purifier that removes 99.97% of allergens, dust, and pollutants from your home or office, with whisper-quiet operation.",
+    "price": 129.99,
+    "category": "home",
+    "image": "https://images.unsplash.com/photo-1592972599429-78d0d41e6579?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=733&q=80",
+    "upvotes": 10,
+    "downvotes": 1,
+    "score": 9
+  },
+  {
+    "id": "prod_11",
+    "name": "Solar Powered Outdoor Lights",
+    "description": "Set of 4 weatherproof solar lights for your garden, pathway, or driveway. Charges during the day and automatically lights up at night.",
+    "price": 79.99,
+    "category": "outdoor",
+    "image": "https://images.unsplash.com/photo-1542728929-2b5d9a0c8d34?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80",
+    "upvotes": 7,
+    "downvotes": 0,
+    "score": 7
+  },
+  {
+    "id": "prod_12",
+    "name": "Bluetooth Wireless Earbuds",
+    "description": "True wireless earbuds with 30-hour battery life, touch controls, and premium sound quality for music and calls.",
+    "price": 129.99,
+    "category": "audio",
+    "image": "https://images.unsplash.com/photo-1606220838315-056192d5e927?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+    "upvotes": 21,
+    "downvotes": 3,
+    "score": 18
+  }
+] 
