@@ -34,6 +34,7 @@ const categories = Object.values(ProductCategories).map(category => ({
 export function AuthLayoutClient({ children }: AuthLayoutClientProps) {
   return (
     <div className="grid min-h-screen w-full lg:grid-cols-2">
+      {/* Left Side - Branding and Categories */}
       <div className="hidden lg:block bg-muted relative overflow-hidden">
         {/* Background Pattern */}
         <div 
@@ -63,7 +64,7 @@ export function AuthLayoutClient({ children }: AuthLayoutClientProps) {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="flex items-center gap-2 p-4 rounded-lg bg-black/5 hover:bg-black/10 transition-colors"
+                  className="flex items-center gap-2 p-4 rounded-lg bg-black/20 hover:bg-black/30 transition-colors"
                 >
                   <span className="text-xl">{category.icon}</span>
                   <span className="text-sm font-medium">{category.name}</span>
@@ -97,9 +98,21 @@ export function AuthLayoutClient({ children }: AuthLayoutClientProps) {
         </div>
       </div>
 
-      {/* Auth Form */}
-      <div className="flex items-center justify-center p-8">
-        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+      {/* Right Side - Auth Form */}
+      <div className="flex items-center justify-center p-6 md:p-8 relative">
+        {/* Subtle background pattern for the right side */}
+        <div 
+          className="absolute inset-0 bg-grid-white/5 bg-[size:20px_20px] opacity-30" 
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath d='M0 0h20v20H0z' fill='none' stroke='rgba(255,255,255,0.05)' stroke-width='1'/%3E%3C/svg%3E")`,
+          }}
+        />
+        
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background/50 via-background/70 to-background/90" />
+        
+        {/* Content container with improved width */}
+        <div className="relative z-10 w-full max-w-md mx-auto flex flex-col justify-center space-y-6">
           {children}
         </div>
       </div>

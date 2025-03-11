@@ -1,11 +1,12 @@
 # Tier'd - Product Ranking Application
 
-Tier'd is a modern web application for ranking and reviewing products, featuring a robust voting system, user authentication, and real-time activity tracking.
+Tier'd is a modern web application for ranking and reviewing products, featuring a robust voting system, user authentication, real-time updates, and activity tracking.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-14.0-black)](https://nextjs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-2.0-green)](https://supabase.io/)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployment-black)](https://vercel.com/)
 
 ## Features
 
@@ -21,6 +22,7 @@ Tier'd is a modern web application for ranking and reviewing products, featuring
 - **Vote Toggling**: Users can toggle their votes (clicking the same vote button again removes the vote)
 - **Vote Changing**: Users can change their vote from upvote to downvote and vice versa
 - **Optimistic UI Updates**: Immediate visual feedback with server-side validation
+- **Real-Time Vote Updates**: See votes from other users in real-time with animated UI feedback
 
 ### Profile Page
 - **Enhanced Profile UI**: Modern profile page with cover image, profile picture, and activity feed
@@ -62,6 +64,8 @@ yarn install
 Create a `.env.local` file in the root directory with the following variables:
 ```
 NEXT_PUBLIC_API_URL=your_api_url
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 # Add any other required environment variables
 ```
 
@@ -74,6 +78,52 @@ yarn dev
 
 5. Open your browser and navigate to `http://localhost:3000`
 
+## Deployment on Vercel
+
+### Automatic Deployment
+
+The easiest way to deploy the application is directly from GitHub to Vercel:
+
+1. Fork this repository to your GitHub account
+2. Create a new project on [Vercel](https://vercel.com)
+3. Import your GitHub repository
+4. Vercel will automatically detect the Next.js project and configure the build settings
+5. Add the required environment variables in the Vercel project settings
+6. Deploy the project
+
+### Manual Deployment
+
+You can also deploy the application manually using the Vercel CLI:
+
+1. Install the Vercel CLI:
+```bash
+npm install -g vercel
+```
+
+2. Login to your Vercel account:
+```bash
+vercel login
+```
+
+3. Deploy the application:
+```bash
+vercel
+```
+
+4. For production deployment:
+```bash
+vercel --prod
+```
+
+### Environment Variables for Deployment
+
+Make sure to set the following environment variables in your Vercel project:
+
+- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+- `NEXT_PUBLIC_VERCEL_URL`: Set automatically by Vercel
+- `NEXT_PUBLIC_VERCEL_ENV`: Set to "production" for production deployments
+
 ## Technical Details
 
 ### Tech Stack
@@ -82,6 +132,7 @@ yarn dev
 - **Authentication**: Custom authentication system (easily replaceable with Auth.js/NextAuth)
 - **State Management**: React Context and Hooks
 - **Data Storage**: JSON files (can be replaced with a database)
+- **Real-Time Updates**: Custom event system with Supabase Realtime
 
 ### Architecture
 
@@ -97,6 +148,14 @@ yarn dev
 4. API request is sent to `/api/vote` endpoint
 5. Server validates the vote and updates the vote counts
 6. Response updates the UI or reverts changes if an error occurs
+7. Real-time updates are broadcast to other users via custom events
+
+#### Real-Time Updates
+1. The `useRealtimeUpdates` hook subscribes to database changes
+2. When a vote is cast, a custom event is dispatched
+3. Components listening for these events update their UI accordingly
+4. Toast notifications inform users of new votes and reviews
+5. Vote counts are animated to provide visual feedback
 
 #### Profile Page
 1. User activities are fetched from the server
@@ -122,6 +181,21 @@ yarn dev
 - **GET /api/products**: Get a list of products with optional filtering
 - **GET /api/products/product**: Get detailed information about a specific product
 
+## Testing Real-Time Vote Updates
+
+The application includes a test page to verify real-time vote updates:
+
+1. Navigate to `/test-vote` in your browser
+2. Use the vote buttons to cast votes
+3. Use the simulation controls to trigger vote updates from other users
+4. Observe the real-time updates in the UI and toast notifications
+
+This test page demonstrates:
+- Real-time vote count updates
+- Animated UI feedback
+- Toast notifications for vote events
+- Different types of vote actions (upvote, downvote, change, remove)
+
 ## Contributing
 
 1. Fork the repository
@@ -143,6 +217,7 @@ The application includes a standardized voting system that allows users to upvot
 - Vote changing (from upvote to downvote and vice versa)
 - Score calculation (upvotes minus downvotes)
 - Product ranking based on vote score
+- Real-time updates for votes from other users
 
 ### Vote Storage
 
@@ -209,6 +284,17 @@ node fix-votes.js
 
 The script recalculates vote counts based on the actual votes in the `votes` object and updates the `voteCounts` object accordingly.
 
+## Performance Optimizations
+
+The application includes several performance optimizations:
+
+- **Image Optimization**: Automatic image optimization via Next.js Image component
+- **Code Splitting**: Automatic code splitting for smaller bundle sizes
+- **Caching**: Aggressive caching for static assets and API responses
+- **Lazy Loading**: Components and images are loaded only when needed
+- **Optimistic UI**: Updates are shown immediately before server confirmation
+- **Prefetching**: Critical resources are prefetched for faster navigation
+
 ## Acknowledgments
 
 - [Next.js](https://nextjs.org/)
@@ -216,3 +302,4 @@ The script recalculates vote counts based on the actual votes in the `votes` obj
 - [Tailwind CSS](https://tailwindcss.com/)
 - [shadcn/ui](https://ui.shadcn.com/)
 - [Vercel](https://vercel.com/)
+- [Sonner](https://sonner.emilkowal.ski/) for toast notifications

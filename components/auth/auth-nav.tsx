@@ -7,7 +7,7 @@ import { buttonVariants } from "@/components/ui/button"
 
 export function AuthNav() {
   const pathname = usePathname()
-
+  
   return (
     <nav className="flex items-center space-x-2">
       <Link

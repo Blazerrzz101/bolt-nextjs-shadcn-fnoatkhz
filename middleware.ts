@@ -3,6 +3,14 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { Database } from '@/types/supabase'
 
+// Import polyfills for server environment
+try {
+  require('./lib/polyfills');
+  console.debug('Middleware: Polyfills loaded');
+} catch (error: any) {
+  console.warn('Middleware: Failed to load polyfills', error.message);
+}
+
 // Helper function to log errors without exposing sensitive details
 function logError(error: any, context: string) {
   console.error(`Middleware ${context} error:`, {

@@ -21,23 +21,32 @@ export async function initializeVoteState() {
   try {
     // Create data directory if it doesn't exist
     if (!existsSync(DATA_DIR)) {
-      mkdirSync(DATA_DIR, { recursive: true });
-      console.log('Created data directory:', DATA_DIR);
+      try {
+        mkdirSync(DATA_DIR, { recursive: true });
+        console.log('Created data directory:', DATA_DIR);
+      } catch (dirError) {
+        console.error('Error creating data directory (continuing with existing):', dirError);
+        // Continue even if directory creation fails (might already exist with different permissions)
+      }
     }
 
     // Create votes file if it doesn't exist
     if (!existsSync(VOTES_FILE)) {
-      const initialState: VoteState = {
-        votes: {},
-        voteCounts: {},
-        lastUpdated: new Date().toISOString()
-      };
-      writeFileSync(VOTES_FILE, JSON.stringify(initialState, null, 2), 'utf8');
-      console.log('Created votes file:', VOTES_FILE);
+      try {
+        const initialState: VoteState = {
+          votes: {},
+          voteCounts: {},
+          lastUpdated: new Date().toISOString()
+        };
+        writeFileSync(VOTES_FILE, JSON.stringify(initialState, null, 2), 'utf8');
+        console.log('Created votes file:', VOTES_FILE);
+      } catch (fileError) {
+        console.error('Error creating votes file (will use in-memory state):', fileError);
+        // Will continue with in-memory state if file creation fails
+      }
     }
   } catch (error) {
-    console.error('Error initializing vote state:', error);
-    throw error;
+    console.error('Error initializing vote state (will use in-memory state):', error);
   }
 }
 
@@ -45,47 +54,76 @@ export async function initializeVoteState() {
 export async function getVoteState(): Promise<VoteState> {
   try {
     await initializeVoteState();
+    
+    // Check if file exists and is readable before trying to read it
+    if (!existsSync(VOTES_FILE)) {
+      console.log('Votes file does not exist, returning empty state');
+      return {
+        votes: {},
+        voteCounts: {},
+        lastUpdated: new Date().toISOString()
+      };
+    }
+    
     console.log('Reading vote state from:', VOTES_FILE);
-    const data = await fs.readFile(VOTES_FILE, 'utf-8');
-    const state = JSON.parse(data);
     
-    // Validate state structure
-    if (!state.votes || !state.voteCounts) {
-      console.error('Invalid vote state structure:', state);
-      throw new Error('Invalid vote state structure');
-    }
-    
-    // Initialize vote counts for all products if they don't exist
-    const productIds = [
-      'j1k2l3m4-n5o6-p7q8-r9s0-t1u2v3w4x5y6', // ASUS monitor
-      'c8d9e0f1-2a3b-4c5d-6e7f-8g9h0i1j2k3l', // Razer mouse
-      '9dd2bfe2-6eef-40de-ae12-c35ff1975914',  // Logitech mouse
-      'a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6', // Logitech G Pro X
-      'q1w2e3r4-t5y6-u7i8-o9p0-a1s2d3f4g5h6', // SteelSeries Apex Pro
-      'z1x2c3v4-b5n6-m7k8-j9h0-g1f2d3s4a5', // Ducky One 3
-      'p9o8i7u6-y5t4-r3e2-w1q0-z9x8c7v6b5', // Samsung Odyssey G7
-      'n4m3b2v1-c8x7z6-p5o4i3-u2y1t0-r9e8w7q6', // HyperX Cloud Alpha
-      'l5k4j3h2-g1f0d9-s8a7p6-o5i4u3-y2t1r0e9', // SteelSeries Arctis Pro
-      'w9q8e7r6-t5y4u3-i2o1p0-a9s8d7-f6g5h4j3' // Logitech G915
-    ];
-    
-    let stateUpdated = false;
-    for (const productId of productIds) {
-      if (!state.voteCounts[productId]) {
-        state.voteCounts[productId] = { upvotes: 0, downvotes: 0 };
-        stateUpdated = true;
+    try {
+      const data = await fs.readFile(VOTES_FILE, 'utf-8');
+      let state;
+      
+      try {
+        state = JSON.parse(data);
+      } catch (parseError) {
+        console.error('Error parsing vote state JSON:', parseError);
+        throw new Error('Invalid JSON in votes file');
       }
+      
+      // Validate state structure
+      if (!state.votes || !state.voteCounts) {
+        console.error('Invalid vote state structure:', state);
+        throw new Error('Invalid vote state structure');
+      }
+      
+      // Initialize vote counts for all products if they don't exist
+      const productIds = [
+        'j1k2l3m4-n5o6-p7q8-r9s0-t1u2v3w4x5y6', // ASUS monitor
+        'c8d9e0f1-2a3b-4c5d-6e7f-8g9h0i1j2k3l', // Razer mouse
+        '9dd2bfe2-6eef-40de-ae12-c35ff1975914',  // Logitech mouse
+        'a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6', // Logitech G Pro X
+        'q1w2e3r4-t5y6-u7i8-o9p0-a1s2d3f4g5h6', // SteelSeries Apex Pro
+        'z1x2c3v4-b5n6-m7k8-j9h0-g1f2d3s4a5', // Ducky One 3
+        'p9o8i7u6-y5t4-r3e2-w1q0-z9x8c7v6b5', // Samsung Odyssey G7
+        'n4m3b2v1-c8x7z6-p5o4i3-u2y1t0-r9e8w7q6', // HyperX Cloud Alpha
+        'l5k4j3h2-g1f0d9-s8a7p6-o5i4u3-y2t1r0e9', // SteelSeries Arctis Pro
+        'w9q8e7r6-t5y4u3-i2o1p0-a9s8d7-f6g5h4j3' // Logitech G915
+      ];
+      
+      let stateUpdated = false;
+      for (const productId of productIds) {
+        if (!state.voteCounts[productId]) {
+          state.voteCounts[productId] = { upvotes: 0, downvotes: 0 };
+          stateUpdated = true;
+        }
+      }
+      
+      // Only try to save if we have write access and need to update
+      if (stateUpdated) {
+        try {
+          await saveVoteState(state);
+        } catch (saveError) {
+          console.error('Error saving updated vote state:', saveError);
+          // Continue with the state we have even if save fails
+        }
+      }
+      
+      console.log('Successfully read vote state');
+      return state;
+    } catch (readError) {
+      console.error('Error reading vote state file:', readError);
+      throw readError;
     }
-    
-    // Save state if any products were initialized
-    if (stateUpdated) {
-      await saveVoteState(state);
-    }
-    
-    console.log('Successfully read vote state:', state);
-    return state;
   } catch (error) {
-    console.error('Error reading vote state:', error);
+    console.error('Error getting vote state:', error);
     // Return a fresh state if there's an error
     return {
       votes: {},
@@ -100,7 +138,6 @@ export async function saveVoteState(state: VoteState): Promise<void> {
   const tempFile = `${VOTES_FILE}.tmp`;
   try {
     await initializeVoteState();
-    console.log('Saving vote state:', JSON.stringify(state, null, 2));
     
     // Validate state structure before saving
     if (!state.votes || !state.voteCounts || typeof state.lastUpdated !== 'string') {
@@ -110,24 +147,25 @@ export async function saveVoteState(state: VoteState): Promise<void> {
     // Update lastUpdated timestamp
     state.lastUpdated = new Date().toISOString();
     
-    // Write to temporary file first
-    await fs.writeFile(tempFile, JSON.stringify(state, null, 2), 'utf8');
-    console.log('Written to temp file:', tempFile);
-    
-    // Ensure the write was successful by reading back the file
-    const tempData = await fs.readFile(tempFile, 'utf8');
-    const parsedData = JSON.parse(tempData);
-    if (!parsedData.votes || !parsedData.voteCounts) {
-      throw new Error('Validation failed after writing temp file');
+    try {
+      // Write to temporary file first
+      await fs.writeFile(tempFile, JSON.stringify(state, null, 2), 'utf8');
+      console.log('Written to temp file:', tempFile);
+      
+      // Ensure the write was successful by reading back the file
+      const tempData = await fs.readFile(tempFile, 'utf8');
+      const parsedData = JSON.parse(tempData);
+      if (!parsedData.votes || !parsedData.voteCounts) {
+        throw new Error('Validation failed after writing temp file');
+      }
+      
+      // Rename temp file to actual file (atomic operation)
+      await fs.rename(tempFile, VOTES_FILE);
+      console.log('Successfully saved vote state to:', VOTES_FILE);
+    } catch (error) {
+      console.error('Error saving vote state (file operation):', error);
+      throw error;
     }
-    
-    // Rename temp file to actual file (atomic operation)
-    await fs.rename(tempFile, VOTES_FILE);
-    console.log('Successfully saved vote state to:', VOTES_FILE);
-    
-    // Verify the final file
-    const finalData = await fs.readFile(VOTES_FILE, 'utf8');
-    console.log('Verified saved data:', finalData);
   } catch (error) {
     console.error('Error saving vote state:', error);
     // Clean up temp file if it exists

@@ -21,16 +21,34 @@ interface EnhancedAuthContextType {
   signUp: (email: string, password: string, name: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   getAuthStatus: () => Promise<EnhancedUser | null>;
+  refreshAuthState: () => Promise<void>;
   isAuthenticated: boolean;
   remainingAnonymousVotes: number;
 }
 
-// Create context
-const EnhancedAuthContext = createContext<EnhancedAuthContextType | undefined>(undefined);
+// Default anonymous user for consistent initial rendering
+const DEFAULT_ANONYMOUS_USER: EnhancedUser = {
+  id: 'anonymous',
+  isAnonymous: true
+};
+
+// Create context with default values matching server-side rendering
+const EnhancedAuthContext = createContext<EnhancedAuthContextType>({
+  user: DEFAULT_ANONYMOUS_USER,
+  isLoading: true,
+  signIn: async () => false,
+  signUp: async () => false,
+  signOut: async () => {},
+  getAuthStatus: async () => DEFAULT_ANONYMOUS_USER,
+  refreshAuthState: async () => {},
+  isAuthenticated: false,
+  remainingAnonymousVotes: 5
+});
 
 // Provider component
 export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<EnhancedUser | null>(null);
+  // Initial state must be consistent with SSR default values
+  const [user, setUser] = useState<EnhancedUser | null>(DEFAULT_ANONYMOUS_USER);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [remainingAnonymousVotes, setRemainingAnonymousVotes] = useState<number>(5);
   const { toast } = useToast();
@@ -38,12 +56,32 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
   // Get authentication status
   const getAuthStatus = async (): Promise<EnhancedUser | null> => {
     try {
+      // Only access localStorage on the client side
+      if (typeof window === 'undefined') {
+        return DEFAULT_ANONYMOUS_USER;
+      }
+
       // For now, we're using mock data/localStorage
       // In a real app, this would call a Supabase/Firebase auth endpoint
       const storedUser = localStorage.getItem('authUser');
+      
       if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        return parsedUser;
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          
+          // Validate that the parsed user has the required fields
+          if (parsedUser && parsedUser.id) {
+            // Ensure isAnonymous is explicitly set to false for authenticated users
+            parsedUser.isAnonymous = false;
+            
+            console.log('Retrieved authenticated user from storage:', parsedUser);
+            return parsedUser;
+          }
+        } catch (parseError) {
+          console.error('Error parsing stored user:', parseError);
+          // Clear invalid user data
+          localStorage.removeItem('authUser');
+        }
       }
       
       // If no authenticated user found, create an anonymous one
@@ -53,10 +91,11 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         isAnonymous: true
       };
       
+      console.log('Created anonymous user:', anonymousUser);
       return anonymousUser;
     } catch (error) {
       console.error('Error checking auth status:', error);
-      return null;
+      return DEFAULT_ANONYMOUS_USER;
     }
   };
 
@@ -108,6 +147,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
       
       // Store the user in localStorage
       localStorage.setItem('authUser', JSON.stringify(mockUser));
+      console.log('User stored in localStorage:', mockUser);
       
       // Make an API call to associate this client ID with the user
       await fetch('/api/vote/link-anonymous-votes', {
@@ -121,7 +161,9 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         }),
       });
       
+      // Update the user state
       setUser(mockUser);
+      console.log('User state updated:', mockUser);
       
       // Reset vote limit since user is now authenticated
       setRemainingAnonymousVotes(999);
@@ -172,6 +214,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
       
       // Store the user in localStorage
       localStorage.setItem('authUser', JSON.stringify(mockUser));
+      console.log('User stored in localStorage after sign-up:', mockUser);
       
       // Make an API call to associate this client ID with the new user
       await fetch('/api/vote/link-anonymous-votes', {
@@ -185,7 +228,9 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         }),
       });
       
+      // Update the user state
       setUser(mockUser);
+      console.log('User state updated after sign-up:', mockUser);
       
       // Reset vote limit since user is now authenticated
       setRemainingAnonymousVotes(999);
@@ -217,10 +262,12 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
     try {
       // This would normally call your auth API
       localStorage.removeItem('authUser');
+      console.log('User removed from localStorage');
       
       // Generate a new client ID to prevent vote manipulation
       clearClientId();
       const newClientId = getClientId(); // This generates a new ID
+      console.log('Generated new client ID after sign-out:', newClientId);
       
       // Create anonymous user
       const anonymousUser: EnhancedUser = {
@@ -228,7 +275,9 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         isAnonymous: true
       };
       
+      // Update the user state
       setUser(anonymousUser);
+      console.log('User state updated to anonymous after sign-out:', anonymousUser);
       
       // Reset vote limit for new anonymous user
       await fetchRemainingVotes();
@@ -249,12 +298,43 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Initialize user on component mount
+  // Refresh auth state function
+  const refreshAuthState = async (): Promise<void> => {
+    try {
+      setIsLoading(true);
+      console.log('Refreshing auth state...');
+      
+      const authUser = await getAuthStatus();
+      setUser(authUser);
+      
+      console.log('Auth state refreshed:', {
+        user: authUser,
+        isAuthenticated: !!authUser && !authUser.isAnonymous
+      });
+      
+      // Fetch remaining votes for anonymous users
+      if (authUser?.isAnonymous) {
+        await fetchRemainingVotes();
+      }
+    } catch (error) {
+      console.error('Error refreshing auth state:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Initialize user on component mount - CLIENT-SIDE ONLY
   useEffect(() => {
     const initUser = async () => {
       try {
         const authUser = await getAuthStatus();
         setUser(authUser);
+        
+        // Debug log
+        console.log('Auth state initialized:', {
+          user: authUser,
+          isAuthenticated: !!authUser && !authUser.isAnonymous
+        });
         
         // Fetch remaining votes for anonymous users
         if (authUser?.isAnonymous) {
@@ -270,6 +350,14 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
     initUser();
   }, []);
   
+  // Debug effect to log auth state changes
+  useEffect(() => {
+    console.log('Auth state changed:', {
+      user,
+      isAuthenticated: !!user && !user.isAnonymous
+    });
+  }, [user]);
+  
   // Create value object
   const value = {
     user,
@@ -278,6 +366,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
     signUp,
     signOut,
     getAuthStatus,
+    refreshAuthState,
     isAuthenticated: !!user && !user.isAnonymous,
     remainingAnonymousVotes,
   };

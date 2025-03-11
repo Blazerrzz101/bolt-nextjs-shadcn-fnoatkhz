@@ -3,14 +3,11 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
-import { AuthNav } from "@/components/auth/auth-nav"
-import { UserNav } from "@/components/auth/user-nav"
-import { useAuth } from "@/hooks/use-auth"
+import { ClientOnly } from "@/components/client-only"
+import { AuthNavigation } from "@/components/layout/auth-navigation"
 
 export function Header() {
   const pathname = usePathname()
-  const { user } = useAuth()
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/50 backdrop-blur-xl">
@@ -52,7 +49,10 @@ export function Header() {
           </Link>
         </nav>
         <div className="ml-auto flex items-center space-x-4">
-          {user ? <UserNav /> : <AuthNav />}
+          {/* Auth navigation only rendered on client-side */}
+          <ClientOnly fallback={<div className="h-8 w-8 rounded-full bg-muted animate-pulse" />}>
+            <AuthNavigation />
+          </ClientOnly>
         </div>
       </div>
     </header>

@@ -1,369 +1,211 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useVote } from "@/hooks/use-vote"
-import { VoteButtons } from "@/components/products/vote-buttons"
-import { useEnhancedAuth } from "@/components/auth/auth-provider"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Separator } from "@/components/ui/separator"
-import { Loader2 } from "lucide-react"
+import { VoteButtons } from "@/components/products/vote-buttons"
+import { toast } from "sonner"
+import { ArrowBigUp, ArrowBigDown, RefreshCw, Zap } from "lucide-react"
+import { useEnhancedAuth } from "@/components/auth/auth-provider"
+import { useRealtimeUpdates } from "@/hooks/use-realtime-updates"
+
+// Mock product for testing
+const mockProduct = {
+  id: "test-product-1",
+  name: "Test Product",
+  description: "This is a test product for real-time vote updates",
+  upvotes: 5,
+  downvotes: 2,
+  score: 3,
+  category: "Test",
+  image: "https://placehold.co/400x300/333/FFF?text=Test+Product",
+  created_at: new Date().toISOString(),
+}
 
 export default function TestVotePage() {
-  const { user, isLoading, signIn, signUp, signOut, isAuthenticated, remainingAnonymousVotes } = useEnhancedAuth()
-  const { getVoteStatus, vote, getClientId, remainingVotes } = useVote()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [name, setName] = useState("")
-  const [voteStatus, setVoteStatus] = useState<any>(null)
-  const [apiResponse, setApiResponse] = useState<any>(null)
-  const [apiError, setApiError] = useState<string | null>(null)
-  const [isTestingApi, setIsTestingApi] = useState(false)
-
-  // Test products
-  const testProducts = [
-    { id: "9dd2bfe2-6eef-40de-ae12-c35ff1975914", name: "Logitech G502 HERO" },
-    { id: "c582a43d-ab13-4f3c-9ed2-e6a3a149b859", name: "SteelSeries Arctis 7" },
-    { id: "31a2cf45-b04c-48be-a222-b5aaede94a64", name: "Razer BlackWidow V3" }
-  ]
-
-  // Test API directly
-  const testVoteAPI = async (productId: string) => {
-    setIsTestingApi(true)
-    setApiError(null)
-    
-    try {
-      const clientId = getClientId()
-      const response = await fetch(`/api/vote?productId=${productId}&clientId=${clientId}`);
-      
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setVoteStatus(data);
-      setApiResponse({
-        endpoint: `/api/vote?productId=${productId}&clientId=${clientId}`,
-        method: 'GET',
-        response: data
-      });
-    } catch (error) {
-      console.error("Error testing vote API:", error);
-      setApiError(error instanceof Error ? error.message : 'Unknown error');
-    } finally {
-      setIsTestingApi(false)
-    }
-  };
-
-  // Test submitting a vote
-  const testSubmitVote = async (productId: string, voteType: 1 | -1) => {
-    setIsTestingApi(true)
-    setApiError(null)
-    
-    try {
-      const clientId = getClientId()
-      const response = await fetch('/api/vote', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          productId,
-          voteType,
-          clientId
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      // Update vote status after submitting
-      await testVoteAPI(productId);
-      
-      setApiResponse({
-        endpoint: '/api/vote',
-        method: 'POST',
-        body: { productId, voteType, clientId },
-        response: data
-      });
-    } catch (error) {
-      console.error("Error submitting vote:", error);
-      setApiError(error instanceof Error ? error.message : 'Unknown error');
-    } finally {
-      setIsTestingApi(false)
-    }
-  };
-
-  // Test remaining votes
-  const testRemainingVotes = async () => {
-    setIsTestingApi(true)
-    setApiError(null)
-    
-    try {
-      const clientId = getClientId()
-      const response = await fetch(`/api/vote/remaining-votes?clientId=${clientId}`);
-      
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      setApiResponse({
-        endpoint: `/api/vote/remaining-votes?clientId=${clientId}`,
-        method: 'GET',
-        response: data
-      });
-    } catch (error) {
-      console.error("Error checking remaining votes:", error);
-      setApiError(error instanceof Error ? error.message : 'Unknown error');
-    } finally {
-      setIsTestingApi(false)
-    }
-  };
-
+  const { user } = useEnhancedAuth()
+  const [simulationActive, setSimulationActive] = useState(false)
+  
+  // Initialize real-time updates
+  useRealtimeUpdates()
+  
+  // Simulate vote updates
   useEffect(() => {
-    if (testProducts.length > 0) {
-      testVoteAPI(testProducts[0].id);
-    }
-  }, []);
+    if (!simulationActive) return
+    
+    const interval = setInterval(() => {
+      // Randomly decide what type of vote update to simulate
+      const action = Math.random() > 0.7 ? 'UPDATE' : Math.random() > 0.5 ? 'INSERT' : 'DELETE'
+      const voteType = action === 'DELETE' ? null : Math.random() > 0.5 ? 1 : -1
+      const oldVoteType = action === 'UPDATE' ? (voteType === 1 ? -1 : 1) : action === 'DELETE' ? (Math.random() > 0.5 ? 1 : -1) : null
+      
+      // Create and dispatch the event
+      window.dispatchEvent(new CustomEvent('vote-update', {
+        detail: {
+          productId: mockProduct.id,
+          voteType,
+          action,
+          oldVoteType,
+          timestamp: new Date().toISOString()
+        }
+      }))
+      
+      // Log the simulated event
+      console.log('Simulated vote update:', {
+        productId: mockProduct.id,
+        voteType,
+        action,
+        oldVoteType,
+      })
+      
+    }, 5000) // Simulate a vote every 5 seconds
+    
+    return () => clearInterval(interval)
+  }, [simulationActive])
+  
+  // Toggle simulation
+  const toggleSimulation = () => {
+    const newState = !simulationActive
+    setSimulationActive(newState)
+    toast.info(newState ? 'Vote simulation started' : 'Vote simulation stopped')
+  }
+  
+  // Manually trigger a vote update
+  const triggerVoteUpdate = (action: string, voteType: number | null, oldVoteType: number | null) => {
+    window.dispatchEvent(new CustomEvent('vote-update', {
+      detail: {
+        productId: mockProduct.id,
+        voteType,
+        action,
+        oldVoteType,
+        timestamp: new Date().toISOString()
+      }
+    }))
+    
+    toast.success('Manual vote update triggered', {
+      description: `Action: ${action}, Vote Type: ${voteType === 1 ? 'Upvote' : voteType === -1 ? 'Downvote' : 'None'}`
+    })
+  }
 
   return (
-    <div className="container max-w-4xl py-10">
-      <h1 className="text-3xl font-bold mb-6">Voting System Test</h1>
-
-      <Tabs defaultValue="voting">
-        <TabsList className="mb-4">
-          <TabsTrigger value="voting">Voting</TabsTrigger>
-          <TabsTrigger value="auth">Authentication</TabsTrigger>
-          <TabsTrigger value="api">API Tests</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="voting" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Vote Buttons Test</CardTitle>
-              <CardDescription>
-                Test the voting functionality on these products
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {testProducts.map(product => (
-                <div key={product.id} className="flex items-center justify-between border p-3 rounded">
-                  <div>
-                    <h3 className="font-medium">{product.name}</h3>
-                    <p className="text-sm text-muted-foreground">ID: {product.id}</p>
-                  </div>
-                  <VoteButtons 
-                    product={product}
-                    initialUpvotes={5}
-                    initialDownvotes={2}
-                  />
-                </div>
-              ))}
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  {user?.isAnonymous 
-                    ? `Anonymous user (${remainingAnonymousVotes ?? remainingVotes ?? '?'} votes remaining)`
-                    : `Signed in as ${user?.name || user?.email || 'Unknown User'}`}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Client ID: {getClientId() || 'Not available'}
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                onClick={() => testProducts.forEach(p => testVoteAPI(p.id))}
-                disabled={isTestingApi}
+    <div className="container mx-auto py-10">
+      <h1 className="text-3xl font-bold mb-6">Real-time Vote Updates Test</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Test Product</CardTitle>
+            <CardDescription>
+              This product is used to test real-time vote updates
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <VoteButtons 
+              product={mockProduct} 
+              initialUpvotes={mockProduct.upvotes}
+              initialDownvotes={mockProduct.downvotes}
+            />
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <div className="text-sm text-muted-foreground">
+              ID: {mockProduct.id}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Score: {mockProduct.score}
+            </div>
+          </CardFooter>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Simulation Controls</CardTitle>
+            <CardDescription>
+              Trigger vote updates to test real-time functionality
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span>Automatic Simulation</span>
+              <Button 
+                variant={simulationActive ? "destructive" : "default"}
+                onClick={toggleSimulation}
+                className="gap-2"
               >
-                {isTestingApi ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Refreshing...
-                  </>
-                ) : "Refresh Vote Status"}
+                <Zap className="h-4 w-4" />
+                {simulationActive ? "Stop Simulation" : "Start Simulation"}
               </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="auth" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Authentication Test</CardTitle>
-              <CardDescription>
-                Test signing in and out to verify vote persistence
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isAuthenticated && user && !user.isAnonymous ? (
-                <div className="space-y-4">
-                  <div className="p-4 border rounded bg-muted/50">
-                    <h3 className="font-medium mb-2">User Profile</h3>
-                    <p><strong>Name:</strong> {user.name || 'Not set'}</p>
-                    <p><strong>Email:</strong> {user.email}</p>
-                    <p><strong>ID:</strong> {user.id}</p>
-                    <p><strong>Anonymous:</strong> {user.isAnonymous ? 'Yes' : 'No'}</p>
-                  </div>
-                  <Button onClick={() => signOut()} className="w-full">Sign Out</Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input 
-                      id="email" 
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)} 
-                      placeholder="your@email.com" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input 
-                      id="password" 
-                      type="password" 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name (for sign up only)</Label>
-                    <Input 
-                      id="name" 
-                      value={name} 
-                      onChange={(e) => setName(e.target.value)} 
-                      placeholder="Your Name" 
-                    />
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button onClick={() => signIn(email, password)} className="flex-1" disabled={isLoading}>
-                      {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Sign In
-                    </Button>
-                    <Button onClick={() => signUp(email, password, name)} className="flex-1" disabled={isLoading}>
-                      {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Sign Up
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="api" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>API Testing</CardTitle>
-              <CardDescription>
-                Test the voting API endpoints directly
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Test Products</Label>
-                <div className="flex flex-wrap gap-2">
-                  {testProducts.map(product => (
-                    <Button 
-                      key={product.id} 
-                      variant="outline" 
-                      size="sm"
-                      disabled={isTestingApi}
-                      onClick={() => testVoteAPI(product.id)}
-                    >
-                      Check {product.name}
-                    </Button>
-                  ))}
-                </div>
+            </div>
+            
+            <div className="border-t pt-4">
+              <h3 className="font-medium mb-3">Manual Triggers</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => triggerVoteUpdate('INSERT', 1, null)}
+                >
+                  <ArrowBigUp className="h-4 w-4 text-green-500" />
+                  New Upvote
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => triggerVoteUpdate('INSERT', -1, null)}
+                >
+                  <ArrowBigDown className="h-4 w-4 text-red-500" />
+                  New Downvote
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => triggerVoteUpdate('UPDATE', 1, -1)}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Change Vote
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => triggerVoteUpdate('DELETE', null, 1)}
+                >
+                  <ArrowBigUp className="h-4 w-4 text-muted-foreground" />
+                  Remove Upvote
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => triggerVoteUpdate('DELETE', null, -1)}
+                >
+                  <ArrowBigDown className="h-4 w-4 text-muted-foreground" />
+                  Remove Downvote
+                </Button>
               </div>
-              
-              <Separator />
-              
-              <div className="space-y-2">
-                <Label>Vote Actions</Label>
-                {testProducts.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium">{testProducts[0].name}:</span>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="bg-green-500/10 hover:bg-green-500/20"
-                        onClick={() => testSubmitVote(testProducts[0].id, 1)}
-                        disabled={isTestingApi}
-                      >
-                        Upvote
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="bg-red-500/10 hover:bg-red-500/20"
-                        onClick={() => testSubmitVote(testProducts[0].id, -1)}
-                        disabled={isTestingApi}
-                      >
-                        Downvote
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              <Separator />
-              
-              <div className="space-y-2">
-                <Label>Other Endpoints</Label>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={testRemainingVotes}
-                    disabled={isTestingApi}
-                  >
-                    Check Remaining Votes
-                  </Button>
-                </div>
-              </div>
-              
-              {apiError && (
-                <div className="p-3 border border-red-200 bg-red-50 text-red-700 rounded mt-4">
-                  <p className="font-medium">Error:</p>
-                  <p className="text-sm">{apiError}</p>
-                </div>
-              )}
-
-              {apiResponse && (
-                <div className="mt-4 p-4 border rounded bg-muted overflow-auto">
-                  <p className="font-medium mb-2">API Response</p>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    <span className="font-mono">{apiResponse.method}</span> <span>{apiResponse.endpoint}</span>
-                  </p>
-                  {apiResponse.body && (
-                    <div className="mb-2">
-                      <p className="text-sm font-medium">Request Body:</p>
-                      <pre className="text-xs bg-muted-foreground/10 p-2 rounded overflow-auto">
-                        {JSON.stringify(apiResponse.body, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                  <p className="text-sm font-medium">Response:</p>
-                  <pre className="text-xs bg-muted-foreground/10 p-2 rounded overflow-auto">
-                    {JSON.stringify(apiResponse.response, null, 2)}
-                  </pre>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </div>
+          </CardContent>
+          <CardFooter className="text-sm text-muted-foreground">
+            {user ? (
+              <span>Logged in as: {user.email}</span>
+            ) : (
+              <span>Not logged in</span>
+            )}
+          </CardFooter>
+        </Card>
+      </div>
+      
+      <div className="mt-8 p-4 bg-card rounded-lg border border-border">
+        <h2 className="text-xl font-semibold mb-2">How This Works</h2>
+        <p className="mb-4">
+          This page demonstrates real-time vote updates using custom events. In a production environment, 
+          these events would come from a real-time database like Supabase.
+        </p>
+        <ul className="list-disc pl-5 space-y-2">
+          <li>The <code>VoteButtons</code> component listens for vote update events and updates its UI accordingly.</li>
+          <li>The <code>VoteNotifications</code> component shows toast notifications when votes are cast.</li>
+          <li>You can cast votes directly using the vote buttons or simulate votes from other users.</li>
+          <li>The simulation will trigger random vote events every 5 seconds.</li>
+          <li>Manual triggers let you test specific vote scenarios.</li>
+        </ul>
+      </div>
     </div>
   )
 } 

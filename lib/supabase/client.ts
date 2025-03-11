@@ -1,49 +1,31 @@
 "use client";
 
-import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Import our wrapper with built-in polyfills and fallbacks
+// @ts-ignore
+const supabaseWrapper = require('../supabase-wrapper');
 
-// Create a Supabase client with explicit configuration for direct API access
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true, // Enable session persistence
-    autoRefreshToken: true, // Automatically refresh tokens
-    detectSessionInUrl: true // Detect session in URL on auth redirect
-  },
-  global: {
-    fetch: (...args) => {
-      // Log RPC calls for debugging (remove in production)
-      if (args[0] && typeof args[0] === 'string' && args[0].includes('/rpc/')) {
-        console.log('Making RPC call to:', args[0]);
-      }
-      return fetch(...args);
-    }
-  }
-})
+// Use the supabase client from our wrapper
+export const supabase = supabaseWrapper.supabase;
+
+// Log if we're using mock mode
+if (supabaseWrapper.isMockMode) {
+  console.log('Using mock Supabase client in client.ts');
+} else {
+  console.log('Using real Supabase client in client.ts');
+}
 
 // Get or create the Supabase client instance
 export function getSupabaseClient() {
   if (supabase) return supabase;
 
-  // For local development, we want to use the local Supabase instance
-  const isLocalDev = process.env.NODE_ENV === 'development' && 
-                     process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('localhost');
-
-  // Test the connection
-  testDatabaseConnection()
-    .then(isConnected => {
-      if (!isConnected) {
-        console.error('Failed to establish initial database connection');
-      } else {
-        console.log(`Successfully connected to ${isLocalDev ? 'local' : 'production'} Supabase instance`);
-      }
-    })
-    .catch(error => {
-      console.error('Error testing database connection:', error);
-    });
+  // If somehow the supabase client isn't available, log it
+  console.error('Supabase client not available, this should not happen');
+  
+  if (supabaseWrapper.supabaseError) {
+    console.error('Supabase error:', supabaseWrapper.supabaseError);
+  }
 
   return supabase;
 }
