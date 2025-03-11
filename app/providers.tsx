@@ -2,6 +2,7 @@
 
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
+import { Toaster as SonnerToaster } from "sonner"
 import { BackgroundGradient } from "@/components/background-gradient"
 import { BetaBanner } from "@/components/beta-banner"
 import { RealtimeProvider } from "@/components/providers/realtime-provider"
@@ -53,6 +54,19 @@ export function Providers({ children }: { children: React.ReactNode }) {
             </RealtimeProvider>
           </TooltipProvider>
           <Toaster />
+          <SonnerToaster 
+            position="bottom-right" 
+            theme="dark" 
+            richColors 
+            closeButton
+            toastOptions={{
+              classNames: {
+                toast: "bg-card border border-border shadow-lg",
+                title: "text-foreground font-medium",
+                description: "text-muted-foreground",
+              }
+            }}
+          />
         </ThemeProvider>
       </QueryClientProvider>
     </SupabaseErrorBoundary>

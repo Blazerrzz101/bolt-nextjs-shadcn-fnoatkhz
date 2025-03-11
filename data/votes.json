@@ -85,7 +85,7 @@
       "downvotes": 0
     }
   },
-  "lastUpdated": "2025-03-03T09:23:05.041Z",
+  "lastUpdated": "2025-03-09T09:45:44.673Z",
   "userVotes": [
     {
       "productId": "j1k2l3m4-n5o6-p7q8-r9s0-t1u2v3w4x5y6",
@@ -278,6 +278,18 @@
       "clientId": "6256cpva8yt_1740526035162",
       "voteType": 1,
       "timestamp": "2025-03-03T09:23:05.041Z"
+    },
+    {
+      "productId": "j1k2l3m4-n5o6-p7q8-r9s0-t1u2v3w4x5y6",
+      "clientId": "6256cpva8yt_1740526035162",
+      "voteType": 0,
+      "timestamp": "2025-03-09T09:45:44.085Z"
+    },
+    {
+      "productId": "j1k2l3m4-n5o6-p7q8-r9s0-t1u2v3w4x5y6",
+      "clientId": "6256cpva8yt_1740526035162",
+      "voteType": 1,
+      "timestamp": "2025-03-09T09:45:44.673Z"
     }
   ]
 }

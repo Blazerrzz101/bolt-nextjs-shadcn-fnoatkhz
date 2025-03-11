@@ -20,6 +20,17 @@ interface VoteButtonsProps {
   initialVoteType?: number | null
 }
 
+// Define the vote update event type
+interface VoteUpdateEvent {
+  detail: {
+    productId: string;
+    voteType: number | null;
+    action: string;
+    oldVoteType: number | null;
+    timestamp: string;
+  }
+}
+
 export function VoteButtons({
   product,
   initialUpvotes = 5,
@@ -100,6 +111,64 @@ export function VoteButtons({
 
   // Add a state variable to track if vote is being processed
   const [isVoting, setIsVoting] = useState(false)
+  
+  // Add effect to listen for real-time vote updates
+  useEffect(() => {
+    // Handler for vote update events
+    const handleVoteUpdate = (event: CustomEvent<VoteUpdateEvent['detail']>) => {
+      const { productId, voteType: newVoteType, action, oldVoteType } = event.detail;
+      
+      // Only process updates for this product
+      if (productId !== product.id) return;
+      
+      console.log(`Real-time vote update for ${product.name}:`, event.detail);
+      
+      // Update vote counts based on the action
+      if (action === 'INSERT') {
+        // New vote added
+        if (newVoteType === 1) {
+          setUpvotes(prev => prev + 1);
+        } else if (newVoteType === -1) {
+          setDownvotes(prev => prev + 1);
+        }
+      } else if (action === 'UPDATE') {
+        // Vote changed
+        if (oldVoteType === 1 && newVoteType === -1) {
+          // Changed from upvote to downvote
+          setUpvotes(prev => Math.max(0, prev - 1));
+          setDownvotes(prev => prev + 1);
+        } else if (oldVoteType === -1 && newVoteType === 1) {
+          // Changed from downvote to upvote
+          setDownvotes(prev => Math.max(0, prev - 1));
+          setUpvotes(prev => prev + 1);
+        }
+      } else if (action === 'DELETE') {
+        // Vote removed
+        if (oldVoteType === 1) {
+          setUpvotes(prev => Math.max(0, prev - 1));
+        } else if (oldVoteType === -1) {
+          setDownvotes(prev => Math.max(0, prev - 1));
+        }
+      }
+      
+      // Animate the vote count to show the update
+      const scoreElement = document.querySelector(`[data-product-id="${product.id}"] .vote-score`);
+      if (scoreElement) {
+        scoreElement.classList.add('vote-update-animation');
+        setTimeout(() => {
+          scoreElement.classList.remove('vote-update-animation');
+        }, 1000);
+      }
+    };
+    
+    // Add event listener for vote updates
+    window.addEventListener('vote-update', handleVoteUpdate as EventListener);
+    
+    // Clean up event listener on unmount
+    return () => {
+      window.removeEventListener('vote-update', handleVoteUpdate as EventListener);
+    };
+  }, [product.id, product.name]);
 
   const handleVote = async (newVoteType: 1 | -1) => {
     // Don't allow voting if disabled or currently voting
@@ -235,7 +304,7 @@ export function VoteButtons({
 
   return (
     <TooltipProvider>
-      <div className="flex flex-col items-center gap-1">
+      <div className="flex flex-col items-center gap-1" data-product-id={product.id}>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -255,7 +324,9 @@ export function VoteButtons({
         </Tooltip>
         
         {/* Show score with dynamic styling */}
-        <span className={`text-sm font-medium ${score > 0 ? 'text-green-500' : score < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+        <span 
+          className={`text-sm font-medium vote-score ${score > 0 ? 'text-green-500' : score < 0 ? 'text-red-500' : 'text-muted-foreground'}`}
+        >
           {score}
         </span>
         
