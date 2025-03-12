@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs/promises';
 import path from 'path';
 import { existsSync } from 'fs';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 // Ensure Vote API is dynamic
 export const dynamic = 'force-dynamic';

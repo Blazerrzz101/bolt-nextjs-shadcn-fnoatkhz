@@ -1,4 +1,5 @@
 // Apply Supabase fixes at the very start
+require('./pre-build-polyfill');
 require('./lib/supabase-entry');
 
 /** @type {import('next').NextConfig} */
@@ -176,6 +177,7 @@ const nextConfig = {
         new webpack.ProvidePlugin({
           process: 'process/browser',
           Buffer: ['buffer', 'Buffer'],
+          // Don't try to provide self and window directly
         }),
       );
     }

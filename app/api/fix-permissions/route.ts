@@ -1,10 +1,12 @@
-import { supabaseServer } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 export async function POST() {
   try {
+    const supabase = await createServerSupabaseClient();
+    
     // Enable RLS on products table
-    const { error: rlsError } = await supabaseServer.rpc("execute_sql", {
+    const { error: rlsError } = await supabase.rpc("execute_sql", {
       sql: "ALTER TABLE products ENABLE ROW LEVEL SECURITY;"
     })
 
@@ -17,12 +19,12 @@ export async function POST() {
     }
 
     // Drop existing policy if it exists
-    await supabaseServer.rpc("execute_sql", {
+    await supabase.rpc("execute_sql", {
       sql: "DROP POLICY IF EXISTS public_read_access ON products;"
     })
 
     // Create policy for public read access
-    const { error: policyError } = await supabaseServer.rpc("execute_sql", {
+    const { error: policyError } = await supabase.rpc("execute_sql", {
       sql: "CREATE POLICY public_read_access ON products FOR SELECT TO public USING (true);"
     })
 
@@ -35,7 +37,7 @@ export async function POST() {
     }
 
     // Grant permissions to public role
-    const { error: grantError } = await supabaseServer.rpc("execute_sql", {
+    const { error: grantError } = await supabase.rpc("execute_sql", {
       sql: "GRANT SELECT ON products TO anon, authenticated;"
     })
 

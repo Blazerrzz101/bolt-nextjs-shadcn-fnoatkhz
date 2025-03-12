@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node supabase-entry.js",
+    "prebuild": "node pre-build-polyfill.js && node supabase-entry.js",
     "build": "next build",
     "build:vercel": "node vercel-build.js",
     "start": "next start",
