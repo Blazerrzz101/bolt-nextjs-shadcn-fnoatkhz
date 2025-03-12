@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase/server';
+import { getTypedSupabaseClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -11,8 +11,10 @@ export const runtime = 'nodejs';
  */
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await getTypedSupabaseClient();
+    
     // Get all products (limit can be adjusted)
-    const { data: products, error: productsError } = await supabaseServer
+    const { data: products, error: productsError } = await supabase
       .from('products')
       .select('id, name, upvotes, downvotes, score')
       .order('created_at', { ascending: false })
@@ -25,18 +27,24 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
     
-    const results = await Promise.all(products.map(async (product) => {
+    const results = await Promise.all(products.map(async (product: { 
+      id: string; 
+      name: string; 
+      upvotes?: number | null;
+      downvotes?: number | null;
+      score?: number | null;
+    }) => {
       try {
         // Count votes directly
-        const { data: votes, error: votesError } = await supabaseServer
+        const { data: votes, error: votesError } = await supabase
           .from('votes')
           .select('vote_type')
           .eq('product_id', product.id);
         
         if (votesError) throw votesError;
         
-        const directUpvotes = votes?.filter(v => v.vote_type === 1).length || 0;
-        const directDownvotes = votes?.filter(v => v.vote_type === -1).length || 0;
+        const directUpvotes = votes?.filter((v: { vote_type: number }) => v.vote_type === 1).length || 0;
+        const directDownvotes = votes?.filter((v: { vote_type: number }) => v.vote_type === -1).length || 0;
         const directScore = directUpvotes - directDownvotes;
         
         // Convert stored values to numbers
@@ -98,7 +106,8 @@ export async function POST(request: NextRequest) {
     // In this example, we're allowing open access for testing
     
     // Get all products
-    const { data: products, error: productsError } = await supabaseServer
+    const supabase = await getTypedSupabaseClient();
+    const { data: products, error: productsError } = await supabase
       .from('products')
       .select('id');
     
@@ -116,7 +125,7 @@ export async function POST(request: NextRequest) {
     for (const product of products || []) {
       try {
         // Get votes for this product
-        const { data: votes, error: votesError } = await supabaseServer
+        const { data: votes, error: votesError } = await supabase
           .from('votes')
           .select('vote_type')
           .eq('product_id', product.id);
@@ -130,12 +139,12 @@ export async function POST(request: NextRequest) {
         }
         
         // Count the votes
-        const upvotes = votes?.filter(v => v.vote_type === 1).length || 0;
-        const downvotes = votes?.filter(v => v.vote_type === -1).length || 0;
+        const upvotes = votes?.filter((v: { vote_type: number }) => v.vote_type === 1).length || 0;
+        const downvotes = votes?.filter((v: { vote_type: number }) => v.vote_type === -1).length || 0;
         const score = upvotes - downvotes;
         
         // Get current product values
-        const { data: currentProduct, error: currentError } = await supabaseServer
+        const { data: currentProduct, error: currentError } = await supabase
           .from('products')
           .select('name, upvotes, downvotes, score')
           .eq('id', product.id)
@@ -161,7 +170,7 @@ export async function POST(request: NextRequest) {
         
         if (needsUpdate) {
           // Update the product
-          const { error: updateError } = await supabaseServer
+          const { error: updateError } = await supabase
             .from('products')
             .update({
               upvotes: upvotes,

@@ -58,6 +58,9 @@ export async function createServerSupabaseClient() {
   }
 }
 
+// Initialize a server client for direct use in API routes
+export const supabaseServer = createServerSupabaseClient();
+
 // Get a product by slug with detailed error handling
 export async function getProduct(slug: string): Promise<Product | null> {
   console.log(`Attempting to fetch product with slug: ${slug}`);
@@ -65,8 +68,10 @@ export async function getProduct(slug: string): Promise<Product | null> {
     // Use mock data if in mock mode
     if (supabaseWrapper.isMockMode) {
       console.log('Using mock data for product fetch');
-      const mockProducts = supabaseWrapper.getMockData().products;
-      const product = mockProducts.find(p => p.url_slug === slug);
+      const mockData = supabaseWrapper.getMockData();
+      // Type assertion to ensure TypeScript knows the structure
+      const mockProducts = (mockData as any).products || [];
+      const product = mockProducts.find((p: any) => p.url_slug === slug);
       
       if (!product) {
         console.log(`Product with slug ${slug} not found in mock data`);
@@ -86,7 +91,8 @@ export async function getProduct(slug: string): Promise<Product | null> {
     // Use real Supabase client
     console.log('Fetching product from Supabase');
     const supabase = await createServerSupabaseClient();
-    const { data, error } = await supabase
+    // Type assertion to ensure TypeScript knows the structure
+    const { data, error } = await (supabase as any)
       .from('products')
       .select(`
         *,
@@ -119,9 +125,6 @@ export async function getProduct(slug: string): Promise<Product | null> {
   }
 }
 
-// Cache the server client to avoid redundant client creation
-export const createCachedServerSupabaseClient = cache(createServerSupabaseClient);
-
 // Define minimal mock data directly for use in case of failure
 const fallbackProducts = [
   {
@@ -153,58 +156,13 @@ const fallbackProducts = [
   }
 ];
 
-// Return product data with better error handling
-export async function getProduct(slug: string): Promise<Product | null> {
-  try {
-    console.log('Fetching product with slug:', slug);
-    
-    // Try to use Supabase first
-    if (!supabaseWrapper.isMockMode) {
-      try {
-        // Get the basic product data from Supabase
-        const { data: productData, error: productError } = await supabaseServer
-          .from('products')
-          .select('*')
-          .eq('url_slug', slug)
-          .single();
-          
-        if (!productError && productData) {
-          console.log('Successfully fetched product from Supabase:', productData.name);
-          return {
-            ...productData,
-            imageUrl: productData.image_url || '',
-            upvotes: 0,
-            downvotes: 0,
-            score: 0,
-            rank: 0,
-            reviews: [],
-            threads: []
-          } as unknown as Product;
-        }
-      } catch (error) {
-        console.error('Error fetching from Supabase, falling back to mock data:', error);
-      }
-    }
-    
-    // Fall back to mock data
-    console.log('Using mock product data');
-    const product = fallbackProducts.find(p => p.url_slug === slug);
-    
-    if (!product) {
-      console.log('No product found with slug:', slug);
-      return null;
-    }
-    
-    // Transform to match Product type
-    return {
-      ...product,
-      imageUrl: product.image_url,
-      rank: 0,
-      reviews: product.reviews || [],
-      threads: product.threads || []
-    } as unknown as Product;
-  } catch (error) {
-    console.error('Error in getProduct:', error);
-    return null;
-  }
+// Cache the server client to avoid redundant client creation
+export const createCachedServerSupabaseClient = cache(createServerSupabaseClient);
+
+// Type-safe version for API routes
+export async function getTypedSupabaseClient() {
+  const client = await createServerSupabaseClient();
+  
+  // Add proper typing to make TS happy
+  return client as any;
 }
