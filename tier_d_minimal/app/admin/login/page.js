@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { setAuthentication } from '../../../lib/auth';
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('');
@@ -17,19 +18,24 @@ export default function AdminLogin() {
     setError('');
     
     try {
-      // For simplicity in this demo, we'll use hardcoded credentials
-      // In a real app, you'd call an API
-      if (username === 'admin' && password === 'REMOVED_EXPOSED_ADMIN_PASSWORD') {
-        // Set a simple cookie for auth
-        if (typeof window !== 'undefined') {
-          document.cookie = 'tier_d_auth_token=demo-token; path=/; max-age=86400;';
-        }
-        
-        // Redirect to admin dashboard
-        router.push('/admin/dashboard');
-      } else {
-        setError('Invalid credentials');
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        setError(data.error || 'Invalid credentials');
+        return;
       }
+
+      // Set authentication token in cookie
+      setAuthentication(data.data.token);
+
+      // Redirect to admin dashboard
+      router.push('/admin/dashboard');
     } catch (error) {
       setError('An error occurred. Please try again.');
       console.error('Login error:', error);
@@ -172,8 +178,8 @@ export default function AdminLogin() {
       </div>
       
       <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.75rem', color: '#6b7280' }}>
-        <p>Default credentials: admin / REMOVED_EXPOSED_ADMIN_PASSWORD</p>
-        <p>For demo purposes only.</p>
+        <p>Use the credentials configured in the server environment.</p>
+
       </div>
     </div>
   );

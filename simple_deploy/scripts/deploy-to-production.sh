@@ -137,7 +137,7 @@ NODE_ENV="production"
 ENABLE_REALTIME="true"
 ENABLE_ANALYTICS="true"
 ADMIN_USERNAME="admin"
-ADMIN_PASSWORD="REMOVED_EXPOSED_ADMIN_PASSWORD"
+ADMIN_PASSWORD=""
 CACHE_TTL="300"
 RATE_LIMIT_DEFAULT="60"
 RATE_LIMIT_STRICT="20"
@@ -172,7 +172,7 @@ if [[ "$deploy_confirm" =~ ^[Yy]$ ]]; then
     echo -e "${YELLOW}Important security notes:${NC}"
     echo -e "  1. ${YELLOW}The CMS dashboard is protected with the following credentials:${NC}"
     echo -e "     ${CYAN}Username:${NC} admin"
-    echo -e "     ${CYAN}Password:${NC} REMOVED_EXPOSED_ADMIN_PASSWORD"
+    echo -e "     ${CYAN}Password: ${NC}configure ADMIN_PASSWORD in the server environment."
     echo -e "  2. ${YELLOW}Please change these credentials immediately in the Vercel dashboard:${NC}"
     echo -e "     ${CYAN}Vercel Dashboard > Project Settings > Environment Variables${NC}"
     echo -e "  3. ${YELLOW}Update ADMIN_USERNAME and ADMIN_PASSWORD with secure values${NC}"
@@ -188,7 +188,7 @@ Deployment URL: ${DEPLOYMENT_URL:-"Check your Vercel dashboard"}
 Admin Dashboard Access:
 - URL: ${DEPLOYMENT_URL:-"Your-deployment-url"}/admin/login
 - Username: admin
-- Password: REMOVED_EXPOSED_ADMIN_PASSWORD
+- Password: configure ADMIN_PASSWORD in the server environment.
 
 IMPORTANT: Please change these credentials immediately in the Vercel dashboard.
 

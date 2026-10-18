@@ -101,7 +101,7 @@ NEXT_PUBLIC_MAX_VOTES_PER_DAY=10
 
 # Admin Credentials
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORD
+ADMIN_PASSWORD=
 ```
 
 ### Next.js Configuration
@@ -161,7 +161,7 @@ After deploying, verify:
 
 1. All pages load correctly
 2. Product voting functionality works
-3. Admin dashboard is accessible (admin/REMOVED_EXPOSED_ADMIN_PASSWORD)
+3. Admin dashboard is accessible using configured server credentials
 
 ## 🛠️ Troubleshooting
 
@@ -191,7 +191,7 @@ The application is deployed in mock database mode, which means:
 
 ## 🔒 Security Notes
 
-- The admin credentials are set to admin/REMOVED_EXPOSED_ADMIN_PASSWORD - change these in a real production environment
+- Configure unique ADMIN_USERNAME and ADMIN_PASSWORD values in the server environment
 - Mock DB mode should be disabled for a real production deployment
 - Proper Supabase credentials should be added for a real database connection
 

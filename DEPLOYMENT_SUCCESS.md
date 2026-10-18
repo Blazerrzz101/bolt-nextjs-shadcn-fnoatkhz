@@ -39,7 +39,7 @@ After deployment, you can access:
 - **Products Page**: `https://[your-vercel-url]/products`
 - **Admin Dashboard**: `https://[your-vercel-url]/admin`
   - Username: admin
-  - Password: REMOVED_EXPOSED_ADMIN_PASSWORD
+  - Password: configure ADMIN_PASSWORD in the server environment.
 
 ## Notes About This Deployment
 

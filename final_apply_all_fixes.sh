@@ -73,9 +73,9 @@ echo "✅ Updated tsconfig.json with proper paths configuration"
 # Step 5: Fix .env.local configuration if needed
 echo "🔧 Step 5: Checking .env.local configuration..."
 if [ -f "$TARGET_DIR/.env.local" ]; then
-  if grep -q "ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORDMOCK_DB=false" "$TARGET_DIR/.env.local"; then
+  if grep -q "ADMIN_PASSWORD=MOCK_DB=false" "$TARGET_DIR/.env.local"; then
     echo "⚠️ Found error in .env.local file, fixing..."
-    sed -i -e 's/ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORDMOCK_DB=false/ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORD\n\n# This value is correctly set above\n# MOCK_DB=false/' "$TARGET_DIR/.env.local"
+    sed -i -e 's/ADMIN_PASSWORD=MOCK_DB=false/ADMIN_PASSWORD=\n\n# This value is correctly set above\n# MOCK_DB=false/' "$TARGET_DIR/.env.local"
     echo "✅ Fixed .env.local file"
   else
     echo "✅ .env.local file looks good"
@@ -106,7 +106,7 @@ NEXT_PUBLIC_MAX_VOTES_PER_DAY=10
 
 # Admin Credentials
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORD
+ADMIN_PASSWORD=
 EOL
   echo "✅ Created .env.local file with proper configuration"
 fi

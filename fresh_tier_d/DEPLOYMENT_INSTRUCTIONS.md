@@ -84,7 +84,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 # Admin Credentials
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORD
+ADMIN_PASSWORD=
 ```
 
 **Important:** To use a real database instead of mock data, edit the `.env.local` file and:
@@ -107,7 +107,7 @@ After deployment, you can access:
 - **Products Page**: `https://[your-deployment-url]/products`
 - **Admin Dashboard**: `https://[your-deployment-url]/admin`
   - Username: admin
-  - Password: REMOVED_EXPOSED_ADMIN_PASSWORD (or the value set in your .env.local)
+  - Password:  (or the value set in your .env.local)
 
 ## Troubleshooting
 

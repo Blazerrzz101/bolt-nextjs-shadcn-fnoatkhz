@@ -9,8 +9,6 @@
     "ENABLE_REALTIME": "true",
     "ENABLE_ANALYTICS": "true",
     "ADMIN_USERNAME": "admin",
-    "ADMIN_PASSWORD": "REMOVED_EXPOSED_ADMIN_PASSWORD",
-    "SUPABASE_SERVICE_ROLE_KEY": "REMOVED_SUPABASE_SERVICE_ROLE_KEY",
     "NEXT_PUBLIC_SITE_URL": "https://qmyvtvvdnoktrwzrdflp.supabase.co",
     "DEPLOY_ENV": "production",
     "NEXT_PUBLIC_ENABLE_VOTES": "true",

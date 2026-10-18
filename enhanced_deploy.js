@@ -157,10 +157,8 @@ module.exports = nextConfig;`;
     "ENABLE_REALTIME": "true",
     "ENABLE_ANALYTICS": "true",
     "ADMIN_USERNAME": "admin",
-    "ADMIN_PASSWORD": "REMOVED_EXPOSED_ADMIN_PASSWORD",
     "NEXT_PUBLIC_SUPABASE_URL": "https://your-project.supabase.co",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "your-anon-key",
-    "SUPABASE_SERVICE_ROLE_KEY": "your-supabase-service-role-key",
     "NEXT_PUBLIC_SITE_URL": "https://tierd.vercel.app",
     "DEPLOY_ENV": "production",
     "NEXT_PUBLIC_ENABLE_VOTES": "true",
@@ -216,7 +214,7 @@ NEXT_PUBLIC_MAX_VOTES_PER_DAY=10
 
 # Admin Credentials
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORD`;
+ADMIN_PASSWORD=`;
 
   writeFile('.env.local', envContent);
   
@@ -280,7 +278,7 @@ ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORD`;
 ✅ Deployment completed successfully!
 
 ⭐ Important Information ⭐
-- Admin Login: admin / REMOVED_EXPOSED_ADMIN_PASSWORD
+- Admin login uses configured server credentials
 - Database Mode: Mock data (no real database required)
 - Note: The application is using mock data, so all votes and changes will be reset when the server restarts.
 

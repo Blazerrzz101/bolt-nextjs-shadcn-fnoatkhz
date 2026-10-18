@@ -38,7 +38,7 @@ NEXT_PUBLIC_MAX_VOTES_PER_DAY=10
 
 # Admin Credentials
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORD
+ADMIN_PASSWORD=
 ```
 
 Also updated `vercel.json` with the same variables to ensure they're available in the deployed environment.
@@ -122,7 +122,7 @@ After deployment:
 1. Access the admin dashboard:
    - URL: `https://[your-deployment-url]/admin`
    - Username: admin
-   - Password: REMOVED_EXPOSED_ADMIN_PASSWORD
+   - Password: configure ADMIN_PASSWORD in the server environment.
 
 2. Verify all components are working:
    - Main pages load correctly

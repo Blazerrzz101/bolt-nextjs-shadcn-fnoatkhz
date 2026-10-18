@@ -74,7 +74,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 # Admin Credentials
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORD
+ADMIN_PASSWORD=
 ```
 
 To use a real database, set `MOCK_DB=false` and update the Supabase credentials.
@@ -87,7 +87,7 @@ The current deployment has the following access points:
 - **Products Page**: [https://freshtier-qv1ft5zr7-jimmonty7-gmailcoms-projects.vercel.app/products](https://freshtier-qv1ft5zr7-jimmonty7-gmailcoms-projects.vercel.app/products)
 - **Admin Dashboard**: [https://freshtier-qv1ft5zr7-jimmonty7-gmailcoms-projects.vercel.app/admin](https://freshtier-qv1ft5zr7-jimmonty7-gmailcoms-projects.vercel.app/admin)
   - Username: admin
-  - Password: REMOVED_EXPOSED_ADMIN_PASSWORD
+  - Password: configure ADMIN_PASSWORD in the server environment.
 
 ## Future Enhancement Opportunities
 

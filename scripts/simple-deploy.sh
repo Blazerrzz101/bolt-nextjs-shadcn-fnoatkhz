@@ -126,7 +126,7 @@ NODE_ENV="production"
 ENABLE_REALTIME="true"
 ENABLE_ANALYTICS="true"
 ADMIN_USERNAME="admin"
-ADMIN_PASSWORD="REMOVED_EXPOSED_ADMIN_PASSWORD"
+ADMIN_PASSWORD=""
 CACHE_TTL="300"
 RATE_LIMIT_DEFAULT="60"
 RATE_LIMIT_STRICT="20"
@@ -157,7 +157,7 @@ Tier'd Application Deployment Information
 Deployment URL: ${DEPLOYMENT_URL}
 Admin Dashboard: ${DEPLOYMENT_URL}/admin/login
 Username: admin
-Password: REMOVED_EXPOSED_ADMIN_PASSWORD
+Password: configure ADMIN_PASSWORD in the server environment.
 
 IMPORTANT: Please change these credentials in the Vercel dashboard.
 EOF

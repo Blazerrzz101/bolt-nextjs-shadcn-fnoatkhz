@@ -48,8 +48,10 @@ export function generateAuthToken() {
 
 // Verify admin credentials
 export function verifyAdminCredentials(username, password) {
-  const validUsername = process.env.ADMIN_USERNAME || 'admin';
-  const validPassword = process.env.ADMIN_PASSWORD || 'REMOVED_EXPOSED_ADMIN_PASSWORD';
+  const validUsername = process.env.ADMIN_USERNAME;
+  const validPassword = process.env.ADMIN_PASSWORD;
+
+  if (!validUsername || !validPassword) return false;
   
   return username === validUsername && password === validPassword;
 }

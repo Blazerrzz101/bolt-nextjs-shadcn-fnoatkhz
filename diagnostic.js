@@ -1,7 +1,11 @@
 const { createClient } = require('@supabase/supabase-js')
 
-const SUPABASE_URL = 'http://localhost:54321'
-const SUPABASE_SERVICE_ROLE_KEY = 'REMOVED_SUPABASE_SERVICE_ROLE_KEY'
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321'
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY must be set in the server environment')
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 

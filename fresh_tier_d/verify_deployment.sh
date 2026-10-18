@@ -87,13 +87,16 @@ if [ $? -eq 0 ]; then ((success_count++)); else ((failed_count++)); fi
 echo ""
 echo "🔍 Checking admin login functionality..."
 
-# Try to log in as admin
-admin_response=$(curl -s -c cookies.txt -X POST "$DEPLOY_URL/api/auth" \
+# Use credentials supplied by the operator; never commit a password.
+: "${ADMIN_USERNAME:?Set ADMIN_USERNAME in the environment before verification}"
+: "${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in the environment before verification}"
+admin_payload=$(ADMIN_USERNAME="$ADMIN_USERNAME" ADMIN_PASSWORD="$ADMIN_PASSWORD" node -e 'process.stdout.write(JSON.stringify({ username: process.env.ADMIN_USERNAME, password: process.env.ADMIN_PASSWORD }))')
+admin_response=$(printf '%s' "$admin_payload" | curl -s -c cookies.txt -X POST "$DEPLOY_URL/api/auth" \
     -H "Content-Type: application/json" \
-    -d '{"username":"admin","password":"REMOVED_EXPOSED_ADMIN_PASSWORD"}')
+    --data-binary @-)
 
 # Check if login was successful by looking for success message in response
-if echo "$admin_response" | grep -q "success"; then
+if echo "$admin_response" | grep -Eq '"success"[[:space:]]*:[[:space:]]*true'; then
     echo "✅ Admin login successful!"
     ((success_count++))
     
@@ -135,7 +138,7 @@ if [ $percentage -eq 100 ]; then
     echo "🎉 All checks passed! Your Tier'd deployment is fully functional."
     echo "   You can access the admin dashboard at $DEPLOY_URL/admin"
     echo "   Username: admin"
-    echo "   Password: REMOVED_EXPOSED_ADMIN_PASSWORD"
+    echo "   Password: configure ADMIN_PASSWORD in the server environment."
 elif [ $percentage -ge 80 ]; then
     echo "⚠️ Most checks passed, but some issues were detected."
     echo "   Please review the failed checks and fix any issues."

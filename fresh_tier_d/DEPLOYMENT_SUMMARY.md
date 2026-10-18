@@ -64,7 +64,7 @@ We have successfully deployed the Tier'd application, a product ranking platform
 To access the admin dashboard, use the following credentials:
 - **URL**: [https://freshtier-qv1ft5zr7-jimmonty7-gmailcoms-projects.vercel.app/admin](https://freshtier-qv1ft5zr7-jimmonty7-gmailcoms-projects.vercel.app/admin)
 - **Username**: admin
-- **Password**: REMOVED_EXPOSED_ADMIN_PASSWORD
+- **Password**: configure ADMIN_PASSWORD in the server environment.
 
 ## Vercel Configuration
 

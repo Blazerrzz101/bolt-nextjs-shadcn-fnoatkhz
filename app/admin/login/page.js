@@ -178,8 +178,8 @@ export default function AdminLogin() {
       </div>
       
       <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.75rem', color: '#6b7280' }}>
-        <p>Default credentials: admin / REMOVED_EXPOSED_ADMIN_PASSWORD</p>
-        <p>For demo purposes only. Change in production.</p>
+        <p>Use the credentials configured in the server environment.</p>
+
       </div>
     </div>
   );

@@ -51,7 +51,7 @@ NEXT_PUBLIC_MAX_VOTES_PER_DAY=10
 
 # Admin Credentials
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORD
+ADMIN_PASSWORD=
 EOL
 
 echo "✅ .env.local configured with mock database mode."
@@ -160,7 +160,7 @@ echo ""
 echo "✅ Deployment completed in $MINUTES minutes and $SECONDS seconds!"
 echo ""
 echo "⭐ Important Information ⭐"
-echo "- Admin Login: admin / REMOVED_EXPOSED_ADMIN_PASSWORD"
+echo "- Admin login uses configured server credentials"
 echo "- Database Mode: Mock data (no real database required)"
 echo "- Note: The application is using mock data, so all votes and changes will be reset when the server restarts."
 echo ""

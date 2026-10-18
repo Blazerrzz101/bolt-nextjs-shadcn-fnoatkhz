@@ -60,7 +60,7 @@ NEXT_PUBLIC_MAX_VOTES_PER_DAY=10
 
 # Admin Credentials
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORD`;
+ADMIN_PASSWORD=`;
 
 writeFile('.env.local', envContent);
 
@@ -148,7 +148,7 @@ readline.question('\n🚀 Build successful! Do you want to deploy to Vercel? (y/
 ✅ Deployment process completed!
 
 ⭐ Important Information ⭐
-- Admin Login: admin / REMOVED_EXPOSED_ADMIN_PASSWORD
+- Admin login uses configured server credentials
 - Database Mode: Mock data (no real database required)
 - Note: The application is using mock data, so all votes and changes will be reset when the server restarts.
 

@@ -59,7 +59,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 # Admin Credentials
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORD
+ADMIN_PASSWORD=
 EOL
             echo "✅ .env.local updated with recommended configuration."
         fi
@@ -83,7 +83,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 # Admin Credentials
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORD
+ADMIN_PASSWORD=
 EOL
     echo "✅ .env.local created with recommended configuration."
 fi
@@ -192,7 +192,7 @@ echo "✅ Deployment URL obtained"
 echo ""
 echo "🔹 Admin dashboard: https://$DEPLOY_URL/admin"
 echo "   Username: admin"
-echo "   Password: REMOVED_EXPOSED_ADMIN_PASSWORD"
+echo "   Password: configure ADMIN_PASSWORD in the server environment."
 
 echo ""
 echo "🚀 Tier'd deployment completed! 🚀" 

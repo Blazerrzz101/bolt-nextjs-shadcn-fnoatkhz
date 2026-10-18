@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function AdminPage() {
@@ -9,22 +8,11 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError('');
-    
-    // Simple admin authentication (demo only)
-    if (username === 'admin' && password === 'REMOVED_EXPOSED_ADMIN_PASSWORD') {
-      // Set a simple cookie for demo purposes
-      document.cookie = 'admin-auth=true; path=/; max-age=3600';
-      router.push('/admin/dashboard');
-    } else {
-      setError('Invalid username or password');
-      setIsLoading(false);
-    }
+    setError('Admin login is unavailable until server-side authentication is configured.');
+    setIsLoading(false);
   };
 
   return (
@@ -88,7 +76,7 @@ export default function AdminPage() {
           
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-600">
-              Demo credentials: admin / REMOVED_EXPOSED_ADMIN_PASSWORD
+              Configure server-side authentication before enabling admin access.
             </p>
           </div>
         </div>

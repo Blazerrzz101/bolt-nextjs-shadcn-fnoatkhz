@@ -8,8 +8,7 @@
     "NODE_ENV": "production",
     "ENABLE_REALTIME": "true",
     "ENABLE_ANALYTICS": "true",
-    "ADMIN_USERNAME": "admin",
-    "ADMIN_PASSWORD": "REMOVED_EXPOSED_ADMIN_PASSWORD"
+    "ADMIN_USERNAME": "admin"
   },
   "headers": [
     {

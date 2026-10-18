@@ -384,9 +384,9 @@ fi
 
 # Fix .env.local file if needed
 echo "🔍 Checking .env.local file..."
-if grep -q "ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORDMOCK_DB=false" .env.local; then
+if grep -q "ADMIN_PASSWORD=MOCK_DB=false" .env.local; then
   echo "⚠️ Found error in .env.local file, fixing..."
-  sed -i -e 's/ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORDMOCK_DB=false/ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORD\n\n# This value is correctly set above\n# MOCK_DB=false/' .env.local
+  sed -i -e 's/ADMIN_PASSWORD=MOCK_DB=false/ADMIN_PASSWORD=\n\n# This value is correctly set above\n# MOCK_DB=false/' .env.local
   echo "✅ Fixed .env.local file"
 else
   echo "✅ .env.local file looks good"

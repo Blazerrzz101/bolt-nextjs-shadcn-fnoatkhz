@@ -4,8 +4,8 @@
 
 // Environment variables for admin credentials
 // In production, use secure environment variables from your hosting platform
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'REMOVED_EXPOSED_ADMIN_PASSWORD';
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 // Simple token generation for admin sessions
 export function generateAuthToken() {
@@ -14,7 +14,7 @@ export function generateAuthToken() {
 
 // Verify admin credentials
 export function verifyAdminCredentials(username, password) {
-  return username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
+  return Boolean(ADMIN_USERNAME && ADMIN_PASSWORD) && username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
 }
 
 // Client-side function to check if user is authenticated

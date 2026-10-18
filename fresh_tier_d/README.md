@@ -30,7 +30,7 @@ Visit the live application: [https://freshtier-qv1ft5zr7-jimmonty7-gmailcoms-pro
 For admin access, use:
 - **URL**: [https://freshtier-qv1ft5zr7-jimmonty7-gmailcoms-projects.vercel.app/admin](https://freshtier-qv1ft5zr7-jimmonty7-gmailcoms-projects.vercel.app/admin)
 - **Username**: admin
-- **Password**: REMOVED_EXPOSED_ADMIN_PASSWORD
+- **Password**: configure ADMIN_PASSWORD in the server environment.
 
 ### 📝 Deployment Status
 
@@ -57,7 +57,7 @@ To run the application locally:
    ENABLE_REALTIME=true
    ENABLE_ANALYTICS=true
    ADMIN_USERNAME=admin
-   ADMIN_PASSWORD=REMOVED_EXPOSED_ADMIN_PASSWORD
+   ADMIN_PASSWORD=
    ```
 4. Start the development server:
    ```
@@ -91,7 +91,7 @@ To run the application locally:
 To access the admin dashboard, use the following credentials:
 
 - **Username**: admin
-- **Password**: REMOVED_EXPOSED_ADMIN_PASSWORD
+- **Password**: configure ADMIN_PASSWORD in the server environment.
 
 ## Deployment Tools
 
